@@ -1,4 +1,4 @@
-package test;
+package compiler;
 
 import org.junit.Test;
 
@@ -8,11 +8,7 @@ import java_cup.runtime.Symbol;
 public class TestLexerStringAnlz {
     static int MAX_STR_CONST = 50;
     static int YYINITIAL = 0;
-
-    /* Need to add to lex */
-    static boolean str_stop = false;
-    static String str_errmsg;
-
+    // test use
     static String test_str = "adsfasdfad\nasdfafdas\\n\"";
     static int idx = 0;
 
@@ -31,7 +27,7 @@ public class TestLexerStringAnlz {
     }
 
     /* mock donothing */
-    static void BEGIN(int x) {
+    static void yybegin(int x) {
     }
 
     static StringBuffer string_buf = new StringBuffer();
@@ -41,10 +37,14 @@ public class TestLexerStringAnlz {
      */
     static void clear_global_status() {
         string_buf.setLength(0);
-        BEGIN(YYINITIAL);
+        yybegin(YYINITIAL);
         str_errmsg = "";
         str_stop = false;
     }
+
+    /* Need to add to lex */
+    static boolean str_stop = false;
+    static String str_errmsg;
 
     /* mock nextToken method */
     public static Symbol nextToken() {
@@ -65,7 +65,9 @@ public class TestLexerStringAnlz {
             }
             // 获得string常量
             else {
-                Symbol symbol = new Symbol(TokenConstants.STR_CONST, string_buf.toString());
+                Symbol symbol = new Symbol(TokenConstants.STR_CONST,
+                        AbstractTable.stringtable.addString(string_buf.toString()));
+                        
                 // 重置全局状态
                 clear_global_status();
                 return symbol;

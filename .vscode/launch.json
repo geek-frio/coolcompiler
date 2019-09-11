@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Lexer",
+            "request": "launch",
+            "mainClass": "compiler.Lexer",
+            "projectName": "coolcompiler",
+            "args": "test.cl",
+        }
+    ]
+}
