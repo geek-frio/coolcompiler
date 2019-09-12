@@ -89,6 +89,7 @@ import java_cup.runtime.Symbol;
 
 %state STROPEN
 %state COMMENTOPEN
+%state LINECOMMENT
 ALPHA=[A-Za-z]
 DIGIT=[0-9]
 NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
@@ -104,6 +105,17 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
 
 <YYINITIAL> \"   {
     yybegin(STROPEN);
+}
+
+<YYINITIAL> "--" {
+    yybegin(LINECOMMENT);
+}
+
+<LINECOMMENT> .* {
+}
+
+<LINECOMMENT> \n {
+    yybegin(YYINITIAL);
 }
 
 <STROPEN> .|\n {
