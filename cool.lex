@@ -91,7 +91,7 @@ import java_cup.runtime.Symbol;
 %state LINECOMMENT
 ALPHA=[A-Za-z]
 DIGIT=[0-9]
-NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
+NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b\r\f\x0b]
 
 %%
 
@@ -115,10 +115,15 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
 
 <LINECOMMENT> \n {
     yybegin(YYINITIAL);
+    curr_lineno++;
 }
 
-<STROPEN> .|\n {
+<STROPEN> .|\n|\r|\f|\x1b {
     String text = yytext();
+    if (string_buf.length() >= MAX_STR_CONST) {
+        str_errmsg = "String constant too long";
+        str_stop = true;
+    }  
     if (text.length() == 1 && !last_str_escape && text.charAt(0) == '"') {
         if (str_stop) {
             Symbol symbol = new Symbol(TokenConstants.ERROR, str_errmsg);
@@ -143,10 +148,7 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
             return symbol;
         }
     }else if (!str_stop) {
-        if (string_buf.length() > MAX_STR_CONST) {
-            str_errmsg = "String constant too long";
-            str_stop = true;
-        } else if (text.length() == 1 && text.charAt(0) == '\0') {
+        if (text.length() == 1 && text.charAt(0) == '\0') {
             str_errmsg = "String contains null character";
             str_stop = true;
         } else if (last_str_escape) {
@@ -169,6 +171,12 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
             case '\\':
                 string_buf.append('\\');
                 break;
+            case '\r':
+                string_buf.append('\r');
+                break;
+            case (char)27:
+                string_buf.append((char)27);
+                break;
             default:
                 string_buf.append(text.charAt(0));
             }
@@ -186,7 +194,7 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
     }
 }
 
-<YYINITIAL> (\\|\!|\#|\$|\_|>|%|\&|\?|\`|\|) {
+<YYINITIAL> (\\|\!|\#|\$|\_|>|%|\&|\?|\`|\x01|\x02|\x03|\x04|\|) {
     return new Symbol(TokenConstants.ERROR, yytext());
 }
 
@@ -413,7 +421,7 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b]
                                   return new Symbol(TokenConstants.DARROW); }
 
 <YYINITIAL> [\'\[\]\>] {
-    return new Symbol(TokenConstants.ERROR, "not supported operator:" + yytext());
+    return new Symbol(TokenConstants.ERROR, yytext());
 } 
 
 <YYINITIAL> . { /* This rule should be the very last

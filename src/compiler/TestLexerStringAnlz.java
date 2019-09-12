@@ -82,6 +82,7 @@ public class TestLexerStringAnlz {
                 str_errmsg = "String contains null character";
                 str_stop = true;
             } else if (last_str_escape) {
+                System.out.println(yytext());
                 switch (text.charAt(0)) {
                 case 'n':
                     string_buf.append('\n');
@@ -100,6 +101,12 @@ public class TestLexerStringAnlz {
                     break;
                 case '\\':
                     string_buf.append('\\');
+                    break;
+                case (char)13:
+                    string_buf.append((char)15);
+                    break;
+                case (char)27:
+                    string_buf.append((char)27);
                     break;
                 default:
                     string_buf.append(text.charAt(0));
