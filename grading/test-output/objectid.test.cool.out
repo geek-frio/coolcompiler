@@ -1,2 +1,0 @@
-Error occurred during initialization of boot layer
-java.lang.IllegalStateException: Module system already initialized

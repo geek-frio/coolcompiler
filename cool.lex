@@ -1,7 +1,7 @@
+package compiler;
 /*
  *  The scanner definition for COOL.
  */
-package compiler;
 import java_cup.runtime.Symbol;
 
 %%
@@ -108,6 +108,7 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b\r\f\x0b]
 
 <YYINITIAL> "--" {
     yybegin(LINECOMMENT);
+    curr_lineno++;
 }
 
 <LINECOMMENT> .* {
@@ -115,7 +116,6 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b\r\f\x0b]
 
 <LINECOMMENT> \n {
     yybegin(YYINITIAL);
-    curr_lineno++;
 }
 
 <STROPEN> .|\n|\r|\f|\x1b {
@@ -180,7 +180,6 @@ NONNEWLINE_WHITE_SPACE_CHAR=[\ \t\b\r\f\x0b]
             default:
                 string_buf.append(text.charAt(0));
             }
-            // 上一次已经是转义,这一次不管怎么样转义的效果要消除
             if(last_str_escape){
                 last_str_escape = false;
             }

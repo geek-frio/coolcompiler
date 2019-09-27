@@ -1,2 +1,0 @@
-Error: Could not find or load main class compiler.Lexer
-Caused by: java.lang.ClassNotFoundException: compiler.Lexer
