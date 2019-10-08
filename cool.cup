@@ -191,7 +191,7 @@ block_exprs ::=
 		RESULT = new Expressions(curr_lineno());
 		RESULT.appendElement(b); 
 	:}
-	| exprs:es block_expr_part:e
+	| block_exprs:es block_expr_part:e
 	{:
 		RESULT = es.appendElement(e); 
 	:}
@@ -295,7 +295,7 @@ expr ::=
 	{: RESULT = new eq(curr_lineno(), e1, e2); :}
 	|	NOT expr:e
 	{: RESULT = new comp(curr_lineno(), e); :}
-	|	(expr:e)
+	|	LPAREN expr:e RPAREN
 	{: RESULT = e; :}
 	|	OBJECTID:name
 	{: RESULT = new object(curr_lineno(), name); :}
