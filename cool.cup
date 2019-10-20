@@ -86,14 +86,19 @@ nonterminal Expressions exprs;
 nonterminal Expressions block_exprs;
 nonterminal Expression block_expr_part;
 nonterminal let let_exprs;
-nonterminal Expression let_expr_part;
 nonterminal Cases cases;
 
 /* Precedence declarations go here. */
-precedence left LT, LE, EQ;
+
+precedence right ASSIGN;
+precedence left NOT;
+precedence nonassoc LT, LE, EQ;
 precedence left PLUS, MINUS;
 precedence left MULT, DIV;
-precedence left NOT, NEG;
+precedence left NEG;
+precedence left AT;
+precedence left DOT;
+precedence left ISVOID;
 
 
 program	
@@ -208,30 +213,37 @@ block_expr_part ::=
 	;
 
 
-/* 以递归嵌套let expr的方式来实现let的多重声明并且满足前面的let声明是后面的scope */
+/*
+	以递归嵌套let expr的方式来实现let的多重声明并且满足前面的let声明是后面的scope 
+	注意这里的错误处理方式很有意思!
+*/
 let_exprs ::=
+		OBJECTID:name COLON TYPEID:t ASSIGN expr:e IN expr:e2
+	{:	
+		RESULT = new let(curr_lineno(), name, t, e, e2);
+	:}
+	|
 		OBJECTID:name COLON TYPEID:t IN expr:e
 	{:
 		no_expr no = new no_expr(curr_lineno()); 
 		RESULT = new let(curr_lineno(), name, t, no, e);
 	:}
-	|	OBJECTID:name COLON TYPEID:t ASSIGN expr:e IN expr:e2
+	|
+		OBJECTID:name COLON TYPEID:t COMMA let_exprs:l
 	{:
-		RESULT = new let(curr_lineno(), name, t, e, e2);
+		no_expr no = new no_expr(curr_lineno());
+		RESULT = new let(curr_lineno(), name, t, no, l);
 	:}
-	|	let_exprs:l COMMA OBJECTID:name COLON TYPEID:t ASSIGN expr:e
+	|	OBJECTID:name COLON TYPEID:t ASSIGN expr:e COMMA let_exprs:l
 	{:
 		RESULT = new let(curr_lineno(), name, t, e, l);
 	:}
-	|	let_exprs:l COMMA OBJECTID:name COLON TYPEID:t
+	| error IN expr
+	| error COMMA let_exprs:ls
 	{:
-		no_expr no = new no_expr(curr_lineno()); 
-		RESULT = new let(curr_lineno(), name, t, no, l);
+		RESULT = ls;
 	:}
-	|	error COMMA
 	;
-
-	
 
 cases ::=
 		OBJECTID:name COLON TYPEID:t DARROW expr:e SEMI
@@ -260,8 +272,8 @@ expr ::=
 	/* no expr dispatch */
 	|	OBJECTID:name LPAREN exprs:es RPAREN
 	{:
-		no_expr no = new no_expr(curr_lineno()); 
-		RESULT = new dispatch(curr_lineno(), no, name, es);
+		object o = new object(curr_lineno(), AbstractTable.idtable.addString("self"));
+		RESULT = new dispatch(curr_lineno(), o, name, es);
 	:}
 	|	IF expr:e1 THEN expr:e2 ELSE expr:e3 FI	
 	{: RESULT = new cond(curr_lineno(), e1, e2, e3); :}
@@ -269,7 +281,7 @@ expr ::=
 	{: RESULT = new loop(curr_lineno(), e1, e2); :}
 	|	LBRACE block_exprs:es RBRACE
 	{: RESULT = new block(curr_lineno(), es); :}
-	|	LET let_exprs:l
+	| 	LET	let_exprs:l
 	{: RESULT = l; :}
 	|	CASE expr:e OF cases:c ESAC
 	{: RESULT = new typcase(curr_lineno(), e, c); :}
