@@ -1,4 +1,3 @@
-package compiler;
 /*
  *  The scanner definition for COOL.
  */

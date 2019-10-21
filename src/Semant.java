@@ -1,4 +1,3 @@
-package compiler;
 /*
 Copyright (c) 2000 The Regents of the University of California.
 All rights reserved.
@@ -20,21 +19,24 @@ ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
 PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-import java.io.PrintStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java_cup.runtime.Symbol;
 
-/** String table entry for identifiers. */
-class IdSymbol extends AbstractSymbol {
-    /* Creates a new symbol.
-     * 
-     * @see AbstractSymbol
-     * */
-    public IdSymbol(String str, int len, int index) {
-	super(str, len, index);
-    }
+/** Static semantics driver class */
+class Semant {
 
-    /** Returns a copy of this symbol */
-    public Object clone() {
-	return new IdSymbol(str, str.length(), index);
+    /** Reads AST from from consosle, and outputs the new AST */
+    public static void main(String[] args) {
+	args = Flags.handleFlags(args);
+	try {
+	    ASTLexer lexer = new ASTLexer(new InputStreamReader(System.in));
+	    ASTParser parser = new ASTParser(lexer);
+	    Object result = parser.parse().value;	
+	    ((Program)result).semant();
+	    ((Program)result).dump_with_types(System.out, 0);
+	} catch (Exception ex) {
+	    ex.printStackTrace(System.err);
+	}
     }
 }
-

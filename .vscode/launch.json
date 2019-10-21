@@ -2,11 +2,18 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CodeLens (Launch) - ClassTable",
+            "request": "launch",
+            "mainClass": "compiler.ClassTable",
+            "projectName": "coolcompiler"
+        },
+        {
+            "type": "java",
             "name": "CodeLens (Launch) - Lexer",
             "request": "launch",
             "mainClass": "compiler.Lexer",
             "projectName": "coolcompiler",
-            "args": "test.cl",
+            "args": "test.cl"
         }
     ]
 }

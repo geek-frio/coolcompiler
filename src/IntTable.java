@@ -1,4 +1,3 @@
-package compiler;
 /*
 Copyright (c) 2000 The Regents of the University of California.
 All rights reserved.
@@ -22,28 +21,29 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 import java.io.PrintStream;
 
-class StringTable extends AbstractTable {
-    /** Creates a new StringSymbol object.
+class IntTable extends AbstractTable {
+    /** Creates a new IntSymbol object.
      * 
-     * @see StringSymbol
+     * @see IntSymbol
      * */
     protected AbstractSymbol getNewSymbol(String s, int len, int index) {
-	return new StringSymbol(s, len, index);
+	return new IntSymbol(s, len, index);
     }
 
-    /** Generates code for all string constants in the string table.  
-     * @param stringclasstag the class tag for String
+    /** Generates code for all int constants in the int table.  
+     * @param intclasstag the class tag for Int
      * @param s the output stream
      * */
-    public void codeStringTable(int stringclasstag, PrintStream s) {
-	StringSymbol sym = null;
+    public void codeStringTable(int intclasstag, PrintStream s) {
+	IntSymbol sym = null;
 	for (int i = tbl.size() - 1; i >= 0; i--) {
 	    try {
-		sym = (StringSymbol)tbl.elementAt(i);
+		sym = (IntSymbol)tbl.elementAt(i);
 	    } catch (ArrayIndexOutOfBoundsException ex) {
 		Utilities.fatalError("Unexpected exception: " + ex);
 	    }
-	    sym.codeDef(stringclasstag, s);
+	    sym.codeDef(intclasstag, s);
 	}
     }
 }
+
