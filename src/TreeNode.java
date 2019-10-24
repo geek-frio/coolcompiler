@@ -330,6 +330,14 @@ abstract class TreeNode {
     protected void dump_line(PrintStream out, int n) {
 	out.println(Utilities.pad(n) + "#" + lineNumber);
     }
+
+    /**
+     * TypeChecking operation
+     */
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+        // do nothing, extend to do
+        return null;
+    }
     
 }
 	

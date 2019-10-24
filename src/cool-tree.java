@@ -8,9 +8,12 @@
 
 import java.util.Enumeration;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Vector;
 
-/** Defines simple phylum Program */
+/**
+ * Defines simple phylum Program
+ */
 abstract class Program extends TreeNode {
     protected Program(int lineNumber) {
         super(lineNumber);
@@ -22,7 +25,9 @@ abstract class Program extends TreeNode {
 
 }
 
-/** Defines simple phylum Class_ */
+/**
+ * Defines simple phylum Class_
+ */
 abstract class Class_ extends TreeNode {
     protected Class_(int lineNumber) {
         super(lineNumber);
@@ -40,7 +45,9 @@ abstract class Class_ extends TreeNode {
 class Classes extends ListNode {
     public final static Class elementClass = Class_.class;
 
-    /** Returns class of this lists's elements */
+    /**
+     * Returns class of this lists's elements
+     */
     public Class getElementClass() {
         return elementClass;
     }
@@ -49,12 +56,16 @@ class Classes extends ListNode {
         super(lineNumber, elements);
     }
 
-    /** Creates an empty "Classes" list */
+    /**
+     * Creates an empty "Classes" list
+     */
     public Classes(int lineNumber) {
         super(lineNumber);
     }
 
-    /** Appends "Class_" element to this list */
+    /**
+     * Appends "Class_" element to this list
+     */
     public Classes appendElement(TreeNode elem) {
         addElement(elem);
         return this;
@@ -65,7 +76,9 @@ class Classes extends ListNode {
     }
 }
 
-/** Defines simple phylum Feature */
+/**
+ * Defines simple phylum Feature
+ */
 abstract class Feature extends TreeNode {
     protected Feature(int lineNumber) {
         super(lineNumber);
@@ -83,7 +96,9 @@ abstract class Feature extends TreeNode {
 class Features extends ListNode {
     public final static Class elementClass = Feature.class;
 
-    /** Returns class of this lists's elements */
+    /**
+     * Returns class of this lists's elements
+     */
     public Class getElementClass() {
         return elementClass;
     }
@@ -92,12 +107,16 @@ class Features extends ListNode {
         super(lineNumber, elements);
     }
 
-    /** Creates an empty "Features" list */
+    /**
+     * Creates an empty "Features" list
+     */
     public Features(int lineNumber) {
         super(lineNumber);
     }
 
-    /** Appends "Feature" element to this list */
+    /**
+     * Appends "Feature" element to this list
+     */
     public Features appendElement(TreeNode elem) {
         addElement(elem);
         return this;
@@ -108,7 +127,9 @@ class Features extends ListNode {
     }
 }
 
-/** Defines simple phylum Formal */
+/**
+ * Defines simple phylum Formal
+ */
 abstract class Formal extends TreeNode {
     protected Formal(int lineNumber) {
         super(lineNumber);
@@ -126,7 +147,9 @@ abstract class Formal extends TreeNode {
 class Formals extends ListNode {
     public final static Class elementClass = Formal.class;
 
-    /** Returns class of this lists's elements */
+    /**
+     * Returns class of this lists's elements
+     */
     public Class getElementClass() {
         return elementClass;
     }
@@ -135,12 +158,16 @@ class Formals extends ListNode {
         super(lineNumber, elements);
     }
 
-    /** Creates an empty "Formals" list */
+    /**
+     * Creates an empty "Formals" list
+     */
     public Formals(int lineNumber) {
         super(lineNumber);
     }
 
-    /** Appends "Formal" element to this list */
+    /**
+     * Appends "Formal" element to this list
+     */
     public Formals appendElement(TreeNode elem) {
         addElement(elem);
         return this;
@@ -151,7 +178,9 @@ class Formals extends ListNode {
     }
 }
 
-/** Defines simple phylum Expression */
+/**
+ * Defines simple phylum Expression
+ */
 abstract class Expression extends TreeNode {
     protected Expression(int lineNumber) {
         super(lineNumber);
@@ -188,7 +217,9 @@ abstract class Expression extends TreeNode {
 class Expressions extends ListNode {
     public final static Class elementClass = Expression.class;
 
-    /** Returns class of this lists's elements */
+    /**
+     * Returns class of this lists's elements
+     */
     public Class getElementClass() {
         return elementClass;
     }
@@ -197,12 +228,16 @@ class Expressions extends ListNode {
         super(lineNumber, elements);
     }
 
-    /** Creates an empty "Expressions" list */
+    /**
+     * Creates an empty "Expressions" list
+     */
     public Expressions(int lineNumber) {
         super(lineNumber);
     }
 
-    /** Appends "Expression" element to this list */
+    /**
+     * Appends "Expression" element to this list
+     */
     public Expressions appendElement(TreeNode elem) {
         addElement(elem);
         return this;
@@ -213,7 +248,9 @@ class Expressions extends ListNode {
     }
 }
 
-/** Defines simple phylum Case */
+/**
+ * Defines simple phylum Case
+ */
 abstract class Case extends TreeNode {
     protected Case(int lineNumber) {
         super(lineNumber);
@@ -231,7 +268,9 @@ abstract class Case extends TreeNode {
 class Cases extends ListNode {
     public final static Class elementClass = Case.class;
 
-    /** Returns class of this lists's elements */
+    /**
+     * Returns class of this lists's elements
+     */
     public Class getElementClass() {
         return elementClass;
     }
@@ -240,12 +279,16 @@ class Cases extends ListNode {
         super(lineNumber, elements);
     }
 
-    /** Creates an empty "Cases" list */
+    /**
+     * Creates an empty "Cases" list
+     */
     public Cases(int lineNumber) {
         super(lineNumber);
     }
 
-    /** Appends "Case" element to this list */
+    /**
+     * Appends "Case" element to this list
+     */
     public Cases appendElement(TreeNode elem) {
         addElement(elem);
         return this;
@@ -268,7 +311,7 @@ class programc extends Program {
      * Creates "programc" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for classes
+     * @param a1         initial value for classes
      */
     public programc(int lineNumber, Classes a1) {
         super(lineNumber);
@@ -287,7 +330,7 @@ class programc extends Program {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_program");
-        for (Enumeration e = classes.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = classes.getElements(); e.hasMoreElements(); ) {
             // sm: changed 'n + 1' to 'n + 2' to match changes elsewhere
             ((Class_) e.nextElement()).dump_with_types(out, n + 2);
         }
@@ -311,9 +354,16 @@ class programc extends Program {
     public void semant() {
         /* ClassTable constructor may do some semantic analysis */
         ClassTable classTable = new ClassTable(classes);
-
+        SymbolTable symbolTable = new SymbolTable(classTable);
         /* some semantic analysis code may go here */
-
+        Enumeration enumeration = classes.getElements();
+        // 遍历AST树内的所有class节点,开始由上往下进行递归TypeChecking
+        while (enumeration.hasMoreElements()) {
+            class_c cls = (class_c) enumeration.nextElement();
+            symbolTable.setCurrentClassNode(cls);
+            cls.semant(symbolTable);
+        }
+        // TODO 后续再加入异常控制
         if (classTable.errors()) {
             System.err.println("Compilation halted due to static semantic errors.");
             System.exit(1);
@@ -337,7 +387,7 @@ class class_c extends Class_ {
      * Creates "class_c" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for parent
      * @param a2         initial value for features
      * @param a3         initial value for filename
@@ -383,10 +433,18 @@ class class_c extends Class_ {
         out.print(Utilities.pad(n + 2) + "\"");
         Utilities.printEscapedString(out, filename.getString());
         out.println("\"\n" + Utilities.pad(n + 2) + "(");
-        for (Enumeration e = features.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = features.getElements(); e.hasMoreElements(); ) {
             ((Feature) e.nextElement()).dump_with_types(out, n + 2);
         }
         out.println(Utilities.pad(n + 2) + ")");
+    }
+
+    @Override
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        for (Enumeration e = features.getElements(); e.hasMoreElements(); ) {
+            ((Feature) e.nextElement()).semant(symbolTable);
+        }
+        return null;
     }
 
 }
@@ -406,7 +464,7 @@ class method extends Feature {
      * Creates "method" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for formals
      * @param a2         initial value for return_type
      * @param a3         initial value for expr
@@ -436,7 +494,7 @@ class method extends Feature {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_method");
         dump_AbstractSymbol(out, n + 2, name);
-        for (Enumeration e = formals.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = formals.getElements(); e.hasMoreElements(); ) {
             ((Formal) e.nextElement()).dump_with_types(out, n + 2);
         }
         dump_AbstractSymbol(out, n + 2, return_type);
@@ -459,7 +517,7 @@ class attr extends Feature {
      * Creates "attr" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for type_decl
      * @param a2         initial value for init
      */
@@ -490,6 +548,29 @@ class attr extends Feature {
         init.dump_with_types(out, n + 2);
     }
 
+    @Override
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        // atrr type checking 分两种情况,
+        // 没有 init expression 的情况
+        // 不需要做多余的事情, 也不需要返回类型
+        if (this.init instanceof no_expr) {
+            return null;
+        }
+        // 有 init expression 的情况
+        // 1), 获取属性对应的类型 T0
+        ClassTable.CoolClass.Type type = (ClassTable.CoolClass.Type) symbolTable.lookup(this.name);
+        // 2), 环境变量中加入self -> SELF_TYPE
+        symbolTable.enterScope();
+        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString()));
+        // 3), 执行TypeChecking init的Expression
+        ClassTable.CoolClass.Type returnType = init.semant(symbolTable);
+        symbolTable.exitScope();
+        // 4), 返回类型, 查询返回类型是否为 T0 的子类或者等于 T0
+        if (!symbolTable.getClassTable().checkSub(returnType, type)) {
+            //TODO error recovery
+        }
+        return null;
+    }
 }
 
 /**
@@ -505,7 +586,7 @@ class formalc extends Formal {
      * Creates "formalc" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for type_decl
      */
     public formalc(int lineNumber, AbstractSymbol a1, AbstractSymbol a2) {
@@ -547,7 +628,7 @@ class branch extends Case {
      * Creates "branch" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for type_decl
      * @param a2         initial value for expr
      */
@@ -593,7 +674,7 @@ class assign extends Expression {
      * Creates "assign" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      * @param a1         initial value for expr
      */
     public assign(int lineNumber, AbstractSymbol a1, Expression a2) {
@@ -620,6 +701,15 @@ class assign extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        ClassTable.CoolClass.Type t0 = (ClassTable.CoolClass.Type) symbolTable.lookup(name);
+        ClassTable.CoolClass.Type t1 = expr.semant(symbolTable);
+        if (!symbolTable.getClassTable().checkSub(t1, t0)) {
+            // TODO
+        }
+        return t1;
+    }
+
 }
 
 /**
@@ -637,7 +727,7 @@ class static_dispatch extends Expression {
      * Creates "static_dispatch" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for expr
+     * @param a1         initial value for expr
      * @param a1         initial value for type_name
      * @param a2         initial value for name
      * @param a3         initial value for actual
@@ -645,7 +735,7 @@ class static_dispatch extends Expression {
     public static_dispatch(int lineNumber, Expression a1, AbstractSymbol a2, AbstractSymbol a3, Expressions a4) {
         super(lineNumber);
         expr = a1;
-        type_name = a2;
+        type_name = a2; // 父类类型
         name = a3;
         actual = a4;
     }
@@ -670,13 +760,39 @@ class static_dispatch extends Expression {
         dump_AbstractSymbol(out, n + 2, type_name);
         dump_AbstractSymbol(out, n + 2, name);
         out.println(Utilities.pad(n + 2) + "(");
-        for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = actual.getElements(); e.hasMoreElements(); ) {
             ((Expression) e.nextElement()).dump_with_types(out, n + 2);
         }
         out.println(Utilities.pad(n + 2) + ")");
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        // 获取caller type, 如果caller type 定义为
+        ClassTable.CoolClass.Type callerType = symbolTable.typeCheckingExpression(expr);
+        // 循环 type checking 每个参数的类型
+        List<ClassTable.CoolClass.Type> argTypes = symbolTable.typeCheckMethodArguments(actual);
+        // 取出方法声明的所有Types, 校验类型是否匹配, 即argTypes中的参数是否为声明的类型的子类型
+        // 从前面的调用方的类中取出对应的方法
+        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(type_name.toString());
+        ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
+        // 我们需要校验方法实际传递参数的类型应该为定义类型的子类
+        if (!symbolTable.checkArguments(argTypes, method)) {
+            // TODO 校验不满足
+        }
+        // 增加校验 callerType 应该为 type_name 的子类
+        if (!symbolTable.getClassTable().checkSub(callerType, new ClassTable.CoolClass.Type(type_name.toString()))) {
+            // TODO expr的类型不为type_name的子类
+        }
+        // 如果声明的返回类型为SELF_TYPE,那么返回调用方 expr 类型
+        ClassTable.CoolClass.Type returnType;
+        if (method.getReturnType().getClassName().equals(TreeConstants.SELF_TYPE.toString())) {
+            returnType = callerType;
+        } else {
+            returnType = method.getReturnType();
+        }
+        return returnType;
+    }
 }
 
 /**
@@ -693,7 +809,7 @@ class dispatch extends Expression {
      * Creates "dispatch" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for expr
+     * @param a1         initial value for expr
      * @param a1         initial value for name
      * @param a2         initial value for actual
      */
@@ -722,13 +838,33 @@ class dispatch extends Expression {
         expr.dump_with_types(out, n + 2);
         dump_AbstractSymbol(out, n + 2, name);
         out.println(Utilities.pad(n + 2) + "(");
-        for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = actual.getElements(); e.hasMoreElements(); ) {
             ((Expression) e.nextElement()).dump_with_types(out, n + 2);
         }
         out.println(Utilities.pad(n + 2) + ")");
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        // 获取caller type, 如果caller type 定义为
+        ClassTable.CoolClass.Type callerType = symbolTable.typeCheckingExpression(expr);
+        // 循环 type checking 每个参数的类型
+        List<ClassTable.CoolClass.Type> argTypes = symbolTable.typeCheckMethodArguments(actual);
+        // 取出方法声明的所有Types, 校验类型是否匹配, 即argTypes中的参数是否为声明的类型的子类型
+        // 从前面的调用方的类中取出对应的方法
+        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(callerType.getClassName());
+        ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
+        // 我们需要校验方法实际传递参数的类型应该为定义类型的子类
+        symbolTable.checkArguments(argTypes, method);
+        // 如果声明的返回类型为SELF_TYPE,那么返回 expr 进行 TypeChecking 后的类型
+        ClassTable.CoolClass.Type returnType;
+        if (method.getReturnType().getClassName().equals(TreeConstants.SELF_TYPE.toString())) {
+            returnType = callerType;
+        } else {
+            returnType = method.getReturnType();
+        }
+        return returnType;
+    }
 }
 
 /**
@@ -745,7 +881,7 @@ class cond extends Expression {
      * Creates "cond" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for pred
+     * @param a1         initial value for pred
      * @param a1         initial value for then_exp
      * @param a2         initial value for else_exp
      */
@@ -777,6 +913,21 @@ class cond extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        ClassTable.CoolClass.Type type = pred.semant(symbolTable);
+        if (type == null || !type.getClassName().equals(TreeConstants.Bool.toString())) {
+            // TODO if 表达式的类型必须为布尔类型
+        }
+        ClassTable.CoolClass.Type ifBranchType = then_exp.semant(symbolTable);
+        ClassTable.CoolClass.Type elseBranchType = else_exp.semant(symbolTable);
+        // 取两者往上的共同父类
+        ClassTable.CoolClass.Type lubType = symbolTable.getClassTable().lub(ifBranchType, elseBranchType);
+        if(lubType == null){
+            // TODO 找不到共有的父类, 这是异常的情况
+
+        }
+        return lubType;
+    }
 }
 
 /**
@@ -792,7 +943,7 @@ class loop extends Expression {
      * Creates "loop" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for pred
+     * @param a1         initial value for pred
      * @param a1         initial value for body
      */
     public loop(int lineNumber, Expression a1, Expression a2) {
@@ -834,7 +985,7 @@ class typcase extends Expression {
      * Creates "typcase" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for expr
+     * @param a1         initial value for expr
      * @param a1         initial value for cases
      */
     public typcase(int lineNumber, Expression a1, Cases a2) {
@@ -857,7 +1008,7 @@ class typcase extends Expression {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_typcase");
         expr.dump_with_types(out, n + 2);
-        for (Enumeration e = cases.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = cases.getElements(); e.hasMoreElements(); ) {
             ((Case) e.nextElement()).dump_with_types(out, n + 2);
         }
         dump_type(out, n);
@@ -877,7 +1028,7 @@ class block extends Expression {
      * Creates "block" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for body
+     * @param a1         initial value for body
      */
     public block(int lineNumber, Expressions a1) {
         super(lineNumber);
@@ -896,12 +1047,16 @@ class block extends Expression {
     public void dump_with_types(PrintStream out, int n) {
         dump_line(out, n);
         out.println(Utilities.pad(n) + "_block");
-        for (Enumeration e = body.getElements(); e.hasMoreElements();) {
+        for (Enumeration e = body.getElements(); e.hasMoreElements(); ) {
             ((Expression) e.nextElement()).dump_with_types(out, n + 2);
         }
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+
+        return null;
+    }
 }
 
 /**
@@ -919,7 +1074,7 @@ class let extends Expression {
      * Creates "let" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for identifier
+     * @param a1         initial value for identifier
      * @param a1         initial value for type_decl
      * @param a2         initial value for init
      * @param a3         initial value for body
@@ -970,7 +1125,7 @@ class plus extends Expression {
      * Creates "plus" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public plus(int lineNumber, Expression a1, Expression a2) {
@@ -1012,7 +1167,7 @@ class sub extends Expression {
      * Creates "sub" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public sub(int lineNumber, Expression a1, Expression a2) {
@@ -1054,7 +1209,7 @@ class mul extends Expression {
      * Creates "mul" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public mul(int lineNumber, Expression a1, Expression a2) {
@@ -1096,7 +1251,7 @@ class divide extends Expression {
      * Creates "divide" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public divide(int lineNumber, Expression a1, Expression a2) {
@@ -1137,7 +1292,7 @@ class neg extends Expression {
      * Creates "neg" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      */
     public neg(int lineNumber, Expression a1) {
         super(lineNumber);
@@ -1175,7 +1330,7 @@ class lt extends Expression {
      * Creates "lt" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public lt(int lineNumber, Expression a1, Expression a2) {
@@ -1217,7 +1372,7 @@ class eq extends Expression {
      * Creates "eq" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public eq(int lineNumber, Expression a1, Expression a2) {
@@ -1259,7 +1414,7 @@ class leq extends Expression {
      * Creates "leq" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      * @param a1         initial value for e2
      */
     public leq(int lineNumber, Expression a1, Expression a2) {
@@ -1300,7 +1455,7 @@ class comp extends Expression {
      * Creates "comp" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      */
     public comp(int lineNumber, Expression a1) {
         super(lineNumber);
@@ -1337,7 +1492,7 @@ class int_const extends Expression {
      * Creates "int_const" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for token
+     * @param a1         initial value for token
      */
     public int_const(int lineNumber, AbstractSymbol a1) {
         super(lineNumber);
@@ -1360,6 +1515,10 @@ class int_const extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        return new ClassTable.CoolClass.Type(TreeConstants.Int.toString());
+    }
+
 }
 
 /**
@@ -1374,7 +1533,7 @@ class bool_const extends Expression {
      * Creates "bool_const" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for val
+     * @param a1         initial value for val
      */
     public bool_const(int lineNumber, Boolean a1) {
         super(lineNumber);
@@ -1397,6 +1556,10 @@ class bool_const extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
+    }
+
 }
 
 /**
@@ -1411,7 +1574,7 @@ class string_const extends Expression {
      * Creates "string_const" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for token
+     * @param a1         initial value for token
      */
     public string_const(int lineNumber, AbstractSymbol a1) {
         super(lineNumber);
@@ -1436,6 +1599,9 @@ class string_const extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        return new ClassTable.CoolClass.Type(TreeConstants.Str.toString());
+    }
 }
 
 /**
@@ -1450,7 +1616,7 @@ class new_ extends Expression {
      * Creates "new_" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for type_name
+     * @param a1         initial value for type_name
      */
     public new_(int lineNumber, AbstractSymbol a1) {
         super(lineNumber);
@@ -1473,6 +1639,17 @@ class new_ extends Expression {
         dump_type(out, n);
     }
 
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        // 分两种情况
+        // type_name 为SELF_TYPE的情况
+        if (type_name.equals(TreeConstants.SELF_TYPE)) {
+            return new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().getName().toString());
+        }
+        // type_name 为正常类型的情况
+        else {
+            return new ClassTable.CoolClass.Type(type_name.toString());
+        }
+    }
 }
 
 /**
@@ -1487,7 +1664,7 @@ class isvoid extends Expression {
      * Creates "isvoid" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for e1
+     * @param a1         initial value for e1
      */
     public isvoid(int lineNumber, Expression a1) {
         super(lineNumber);
@@ -1555,7 +1732,7 @@ class object extends Expression {
      * Creates "object" AST node.
      *
      * @param lineNumber the line in the source file from which this node came.
-     * @param a0         initial value for name
+     * @param a1         initial value for name
      */
     public object(int lineNumber, AbstractSymbol a1) {
         super(lineNumber);
@@ -1576,6 +1753,15 @@ class object extends Expression {
         out.println(Utilities.pad(n) + "_object");
         dump_AbstractSymbol(out, n + 2, name);
         dump_type(out, n);
+    }
+
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        ClassTable.CoolClass.Type type = (ClassTable.CoolClass.Type) symbolTable.lookup(name);
+        //TODO error
+        if (type == null) {
+
+        }
+        return type;
     }
 
 }

@@ -19,13 +19,13 @@ ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
 PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-import java.util.Stack;
-import java.util.Hashtable;
+import java.util.*;
 
-/** Implements the symbol table data abstraction.
+/**
+ * Implements the symbol table data abstraction.
  *
  * <p>
- *
+ * <p>
  * In addition to strings, compilers must also determine and manage the
  * scope of program names.  A symbol table is a data structure for
  * managing scope.  Conceptually, a symbol table is just another lookup
@@ -34,7 +34,7 @@ import java.util.Hashtable;
  * type).
  *
  * <p>
- *
+ * <p>
  * In addition to adding and removing symbols, symbol tables also
  * support operations for entering and exiting scopes and for checking
  * whether an identifier is already defined in the current scope.  The
@@ -47,7 +47,7 @@ import java.util.Hashtable;
  * definition of <code>x</code>.
  *
  * <p>
- *
+ * <p>
  * Cool symbol tables are implemented using Java hashtables.  Each
  * hashtable represents a scope and associates a symbol with some
  * data. The ``data'' is whatever data the programmer wishes to
@@ -56,91 +56,178 @@ import java.util.Hashtable;
  *
  * @see AbstractSymbol
  * @see SymtabExample
- * */
+ */
 class SymbolTable {
     private Stack tbl;
-    
-    /** Creates an empty symbol table. */
+    private ClassTable classTable;
+    private class_c currentClassNode;
+
+    public SymbolTable(ClassTable classTable) {
+        this.classTable = classTable;
+        tbl = new Stack();
+    }
+
+    /**
+     * Creates an empty symbol table.
+     */
     public SymbolTable() {
-	tbl = new Stack();
+        tbl = new Stack();
     }
-    
-    /** Enters a new scope. A scope must be entered before anything
+
+    /**
+     * Enters a new scope. A scope must be entered before anything
      * can be added to the table.
-     * */
+     */
     public void enterScope() {
-	tbl.push(new Hashtable());
+        tbl.push(new Hashtable());
     }
 
-    /** Exits the most recently entered scope. */
+    /**
+     * Exits the most recently entered scope.
+     */
     public void exitScope() {
-	if (tbl.empty()) {
-	    Utilities.fatalError("existScope: can't remove scope from an empty symbol table.");
-	}
-	tbl.pop();
+        if (tbl.empty()) {
+            Utilities.fatalError("existScope: can't remove scope from an empty symbol table.");
+        }
+        tbl.pop();
     }
 
-    /** Adds a new entry to the symbol table.
-     *
-     * @param id the symbol
-     * @param info the data asosciated with id
-     * */
-    public void addId(AbstractSymbol id, Object info) {
-	if (tbl.empty()) {
-	    Utilities.fatalError("addId: can't add a symbol without a scope.");
+	public ClassTable getClassTable() {
+		return classTable;
 	}
-	((Hashtable)tbl.peek()).put(id, info);
+
+	public void setClassTable(ClassTable classTable) {
+		this.classTable = classTable;
+	}
+
+	/**
+     * Adds a new entry to the symbol table.
+     *
+     * @param id   the symbol
+     * @param info the data asosciated with id
+     */
+    public void addId(AbstractSymbol id, Object info) {
+        if (tbl.empty()) {
+            Utilities.fatalError("addId: can't add a symbol without a scope.");
+        }
+        ((Hashtable) tbl.peek()).put(id, info);
     }
 
     /**
      * Looks up an item through all scopes of the symbol table.  If
      * found it returns the associated information field, if not it
      * returns <code>null</code>.
-     * 
+	 *
+	 * 加入查询class全局属性的功能
+     *
      * @param sym the symbol
      * @return the info associated with sym, or null if not found
-     * */
+     */
     public Object lookup(AbstractSymbol sym) {
-	if (tbl.empty()) {
-	    Utilities.fatalError("lookup: no scope in symbol table.");
-	}
-	// I break the abstraction here a bit by knowing that stack is 
-	// really a vector...
-	for (int i = tbl.size() - 1; i >= 0; i--) {
-	    Object info = ((Hashtable)tbl.elementAt(i)).get(sym);
-	    if (info != null) return info;
-	}
-	return null;
+        if (tbl.empty()) {
+            Utilities.fatalError("lookup: no scope in symbol table.");
+        }
+        for (int i = tbl.size() - 1; i >= 0; i--) {
+            Object info = ((Hashtable) tbl.elementAt(i)).get(sym);
+            if (info != null) return info;
+        }
+        // 查询class的本地全局属性(也包含父类的属性值的查询), 看是否存在
+        String identifier = sym.toString();
+        ClassTable.CoolClass coolClass = classTable.getCoolClass(this.currentClassNode.getName().toString());
+        ClassTable.CoolClass.Attr attr = coolClass.getGlobalO(identifier);
+        if(attr != null){
+        	return attr.getType();
+		}
+        return null;
     }
 
-    /** 
+    /**
      * Probes the symbol table.  Check the top scope (only) for the
      * symbol <code>sym</code>.  If found, return the information field.
      * If not return <code>null</code>.
      *
      * @param sym the symbol
      * @return the info associated with sym, or null if not found
-     * */
+     */
     public Object probe(AbstractSymbol sym) {
-	if (tbl.empty()) {
-	    Utilities.fatalError("lookup: no scope in symbol table.");
-	}
-	return ((Hashtable)tbl.peek()).get(sym);
+        if (tbl.empty()) {
+            Utilities.fatalError("lookup: no scope in symbol table.");
+        }
+        return ((Hashtable) tbl.peek()).get(sym);
     }
-    
-    /** Gets the string representation of the symbol table.  
+
+    /**
+     * Gets the string representation of the symbol table.
      *
      * @return the string rep
-     * */
+     */
     public String toString() {
-	String res = "";
-	// I break the abstraction here a bit by knowing that stack is 
-	// really a vector...
-	for (int i = tbl.size() - 1, j = 0; i >= 0; i--, j++) {
-	    res += "Scope " + j + ": " + tbl.elementAt(i) + "\n";
-	}
-	return res;
+        String res = "";
+        // I break the abstraction here a bit by knowing that stack is
+        // really a vector...
+        for (int i = tbl.size() - 1, j = 0; i >= 0; i--, j++) {
+            res += "Scope " + j + ": " + tbl.elementAt(i) + "\n";
+        }
+        return res;
     }
+
+    public class_c getCurrentClassNode() {
+        return currentClassNode;
+    }
+
+    public void setCurrentClassNode(class_c currentClassNode) {
+        this.currentClassNode = currentClassNode;
+    }
+
+    /**
+     * TypeChecking Expressions
+     * @param expressions
+     * @return
+     */
+    public List<ClassTable.CoolClass.Type> typeCheckMethodArguments(Expressions expressions) {
+        Enumeration enumeration = expressions.getElements();
+        List<ClassTable.CoolClass.Type> argTypes = new ArrayList<>();
+        while (enumeration.hasMoreElements()) {
+            Expression argExpression = (Expression) enumeration.nextElement();
+            ClassTable.CoolClass.Type argType = argExpression.semant(this);
+            // TODO 校验每个参数的类型,不能为SELF_TYPE
+            argTypes.add(argType);
+        }
+        return argTypes;
+    }
+
+    /**
+     * TypeChecking Expression
+     * @param expr
+     * @return
+     */
+    public ClassTable.CoolClass.Type typeCheckingExpression(Expression expr) {
+        ClassTable.CoolClass.Type callerType = expr.semant(this);
+        if (callerType.getClassName().equals(TreeConstants.SELF_TYPE.toString())) {
+            callerType = new ClassTable.CoolClass.Type(this.getCurrentClassNode().name.toString());
+        }
+        return callerType;
+    }
+
+    /**
+     * Match check method argument's type
+     * @param argTypes
+     * @param method
+     */
+    public boolean checkArguments(List<ClassTable.CoolClass.Type> argTypes, ClassTable.CoolClass.Method method) {
+        if(method == null){
+            // TODO 没有找到对应的方法
+        }
+        for (int i = 0; i < argTypes.size(); i++) {
+            ClassTable.CoolClass.Type arg = argTypes.get(i);
+            ClassTable.CoolClass.Type dclrArg = method.getArgType().get(i).getType();
+            if(!this.getClassTable().checkSub(arg, dclrArg)){
+                // TODO 不为子类的异常处理
+            }
+        }
+        return true;
+    }
+
 }
     
 	

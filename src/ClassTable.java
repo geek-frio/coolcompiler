@@ -9,10 +9,22 @@ import java.util.*;
 class ClassTable {
     private int semantErrors;
     private PrintStream errorStream;
+    private Classes classes;
     // 类名和AST节点映射关系
     private Map<String, class_c> classcMap = new HashMap<>();
     // 类名和抽象类映射关系
     private Map<String, CoolClass> coolClassMap = new HashMap();
+
+    public void init() {
+        installBasicClasses();
+        collectAllProgramClasses(this.classes);
+        analyzeInheritsStructure();
+    }
+
+    public CoolClass getCoolClass(String className) {
+        CoolClass coolClass = coolClassMap.get(className);
+        return coolClass;
+    }
 
     /**
      * Creates data structures representing basic Cool classes (Object, IO, Int,
@@ -130,7 +142,7 @@ class ClassTable {
             // 获取当前需要完善父类信息的类的名称
             String className = e.getKey();
             // 对于之前已经作为别的子类的父类已经被分析过了, 则不需要进行再一次的重新分析
-            if(coolClassMap.get(className) != null){
+            if (coolClassMap.get(className) != null) {
                 continue;
             }
             // 分析每个 Class 的属性和方法列表, 向上寻找父类, 获取属性和方法信息
@@ -143,9 +155,12 @@ class ClassTable {
             TreeMap<String, CoolClass.Attr> attrsMap = new TreeMap<>();
             // 初始化 methodName -> Method 映射 methodMap
             TreeMap<String, CoolClass.Method> methodsMap = new TreeMap<>();
+            // 初始化 inheritedTypes
+            List<CoolClass.Type> inheritedTypes = new ArrayList<>();
             // "循环" pop stack 如果不为空
             class_c top = stack.pop();
             while (top != null) {
+                inheritedTypes.add(new CoolClass.Type(top.name.toString()));
                 //  获取当前正在操作的类
                 String currentClassName = top.getName().toString();
                 // 	循环遍历class_c的所有feature
@@ -160,26 +175,30 @@ class ClassTable {
                     else if (feature instanceof method) {
                         methodsAssembleOperation(methodsMap, currentClassName, feature);
                     } else {
-                        throw new RuntimeException("illegal type!");
+                        throw new RuntimeException(String.format("illegal type!, linenum:%d", feature.lineNumber));
                     }
                 }
                 // 在栈从上往下不断进行Pop父类的过程中,这些父类也应该不需要再次进行分析了
-                parentCoolClassGen(attrsMap, methodsMap, currentClassName);
+                parentCoolClassGen(attrsMap, methodsMap, currentClassName, inheritedTypes);
                 // 推出栈头部的class进行继续分析
                 top = stack.pop();
             }
             //	使用 attrs, attrsMap, methodMap生成新的CoolClass对象
-            CoolClass coolClass =  new CoolClass(new CoolClass.Type(className), attrsMap, methodsMap);
-            //4. 将 ClassTable.CoolClass 对象和名称映射放入 coolClassMap中去
+            CoolClass coolClass = new CoolClass(new CoolClass.Type(className), attrsMap, methodsMap, inheritedTypes);
+            // 将 ClassTable.CoolClass 对象和名称映射放入 coolClassMap中去
             coolClassMap.put(className, coolClass);
         }
     }
 
-    private void parentCoolClassGen(TreeMap<String, CoolClass.Attr> attrsMap, TreeMap<String, CoolClass.Method> methodsMap, String currentClassName) {
+    private void parentCoolClassGen(TreeMap<String, CoolClass.Attr> attrsMap, TreeMap<String, CoolClass.Method> methodsMap, String currentClassName, List<CoolClass.Type> inheritedTypes) {
         // 这里是shallow copy,共用一套key, value
-        TreeMap<String, CoolClass.Attr> cloneAttrMap = (TreeMap<String, CoolClass.Attr>)attrsMap.clone();
-        TreeMap<String, CoolClass.Method> cloneMethodMap = (TreeMap<String, CoolClass.Method>)methodsMap.clone();
-        CoolClass coolClass =  new CoolClass(new CoolClass.Type(currentClassName), cloneAttrMap, cloneMethodMap);
+        TreeMap<String, CoolClass.Attr> cloneAttrMap = (TreeMap<String, CoolClass.Attr>) attrsMap.clone();
+        TreeMap<String, CoolClass.Method> cloneMethodMap = (TreeMap<String, CoolClass.Method>) methodsMap.clone();
+        List<CoolClass.Type> cloneList = new ArrayList<>();
+        for (CoolClass.Type t : inheritedTypes) {
+            cloneList.add(t);
+        }
+        CoolClass coolClass = new CoolClass(new CoolClass.Type(currentClassName), cloneAttrMap, cloneMethodMap, cloneList);
         coolClassMap.put(currentClassName, coolClass);
     }
 
@@ -190,15 +209,15 @@ class ClassTable {
         //获取方法返回类型组装(结合currentClassName)
         method.setReturnType(new CoolClass.Type(node.return_type.toString()));
         //获取组装参数(结合currentClassName)
-        if(node.formals != null){
+        if (node.formals != null) {
             Enumeration formalE = node.formals.getElements();
             List<CoolClass.Attr> args = new ArrayList<>();
-            while(formalE.hasMoreElements()){
-                formalc fc = (formalc)formalE.nextElement();
+            while (formalE.hasMoreElements()) {
+                formalc fc = (formalc) formalE.nextElement();
                 CoolClass.Attr attr = new CoolClass.Attr();
                 attr.setName(fc.name.toString());
                 // 校验方法的参数的类型不能为SELF_TYPE
-                if(fc.type_decl.equals(TreeConstants.SELF_TYPE)){
+                if (fc.type_decl.equals(TreeConstants.SELF_TYPE)) {
                     throw new RuntimeException(String.format("arg:%s, type should not be SELF_TYPE, linenum:%d", attr.getName(), fc.lineNumber));
                 }
                 attr.setType(new CoolClass.Type(fc.type_decl.toString()));
@@ -209,13 +228,13 @@ class ClassTable {
         method.setMethodName((node.name.toString()));
         //查询方法映射map里面是否已经有了对应的Method, 如果有进行equals判断
         CoolClass.Method old;
-        if((old = methodsMap.get(methodName)) != null){
+        if ((old = methodsMap.get(methodName)) != null) {
             // 方法在子类中重新实现,但是参数或者返回类型并不与父类相匹配
-            if(!old.equals(method)){
+            if (!old.equals(method)) {
                 throw new RuntimeException(String.format("method:%s redifine failed, linenum:%d", methodName, feature.lineNumber));
             }
             // IO 基础类的方法不能被重新实现
-            if(old.getOriginType().className.equals(TreeConstants.IO.toString())){
+            if (old.getOriginType().className.equals(TreeConstants.IO.toString())) {
                 throw new RuntimeException(String.format("IO method can not be redifined, linenum:%d", feature.lineNumber));
             }
             // 子类进行方法的重新声明
@@ -241,6 +260,48 @@ class ClassTable {
         attrsMap.put(name, attr);
     }
 
+    /**
+     * 取两者往上共有的父类
+     *
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public CoolClass.Type lub(CoolClass.Type t1, CoolClass.Type t2) {
+        CoolClass clt1 = this.coolClassMap.get(t1.className);
+        CoolClass clt2 = this.coolClassMap.get(t2.className);
+        if (clt1 != null && clt2 != null) {
+            List<CoolClass.Type> t1In = clt1.getInheritedTypes();
+            List<CoolClass.Type> t2In = clt2.getInheritedTypes();
+            // 这里关于取出共有父类, 可以使用类似归并排序的算法
+            // class 的继承结构是一个树状结构
+            // 向上寻找共同的父类的时候, 一定是一个同一个层级的父类, 所以可以使用O(n)的复杂度来寻找出共有的父类
+            int startNum = -Math.max(t1In.size(), t2In.size());
+            int startT1Num = startNum + t1In.size();
+            int startT2Num = startNum + t2In.size();
+            while(true){
+                // 如果其中有任何一个指针超过了,则都找不到共同的parent type
+                if(startT1Num > (t1In.size() - 1) || startT2Num > (t2In.size() - 1)){
+                    break;
+                }
+                if(startT1Num >= 0 && startT2Num >= 0){
+                    CoolClass.Type ct1 = t1In.get(startT1Num);
+                    CoolClass.Type ct2 = t2In.get(startT2Num);
+                    if(ct1.getClassName().equals(ct2.className)){
+                        return new CoolClass.Type(ct1.getClassName());
+                    }
+                }
+                startT1Num++;
+                startT2Num++;
+            }
+        }
+        return null;
+    }
+
+    public CoolClass.Type lub(){
+        return null;
+    }
+
     private void assembleInheriteClassStack(Map.Entry<String, class_c> nameClassc, Stack<class_c> stack) {
         // 生成指向当前栈头部classc的指针
         class_c cls = nameClassc.getValue();
@@ -253,9 +314,9 @@ class ClassTable {
              * 1. Int, Str, Bool 不能被继承
              * 2. IO 可以被继承, 但是不能被重新定义方法
              */
-            if(parentName.equals(TreeConstants.Int.toString())
+            if (parentName.equals(TreeConstants.Int.toString())
                     || parentName.equals(TreeConstants.Str.toString())
-                    || parentName.equals(TreeConstants.Bool.toString())){
+                    || parentName.equals(TreeConstants.Bool.toString())) {
                 throw new RuntimeException(String.format("%s can not be inherited, linenum:%d", parentName, cls.lineNumber));
             }
             class_c parent = classcMap.get(parentName);
@@ -281,6 +342,8 @@ class ClassTable {
         errorStream = System.err;
 
         /* fill this in */
+        this.classes = cls;
+        init();
     }
 
     /**
@@ -329,19 +392,52 @@ class ClassTable {
         return semantErrors != 0;
     }
 
+    /**
+     * 判斷 t1 是否為 t2 的子類或者相同
+     *
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public boolean checkSub(CoolClass.Type t1, CoolClass.Type t2) {
+        CoolClass sub = coolClassMap.get(t1);
+        for (CoolClass.Type t : sub.inheritedTypes) {
+            if (t.equals(t2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static class CoolClass {
         private Type type;
         private TreeMap<String, Method> methodMap;
         private TreeMap<String, Attr> attrMap;
+        private List<Type> inheritedTypes;
 
-        public CoolClass(Type type, TreeMap<String, Attr> attrs, TreeMap<String, Method> methods) {
+        public CoolClass(Type type, TreeMap<String, Attr> attrs, TreeMap<String, Method> methods, List<Type> inheritedTypes) {
             this.type = type;
             this.attrMap = attrs;
             this.methodMap = methods;
+            this.inheritedTypes = inheritedTypes;
         }
 
+        /**
+         * 获取class的方法描述
+         *
+         * @param methodIdentifier
+         * @return
+         */
         public Method getM(String methodIdentifier) {
             return methodMap.get(methodIdentifier);
+        }
+
+        public List<Type> getInheritedTypes() {
+            return inheritedTypes;
+        }
+
+        public void setInheritedTypes(List<Type> inheritedTypes) {
+            this.inheritedTypes = inheritedTypes;
         }
 
         public Attr getGlobalO(String attrIdentifier) {
@@ -395,7 +491,7 @@ class ClassTable {
         static class Attr {
             private Type type;
             private String name;
-			private Type originType;
+            private Type originType;
 
             public boolean equals(Attr obj) {
                 return this.name.equals(obj.getName());
@@ -417,14 +513,14 @@ class ClassTable {
                 this.name = name;
             }
 
-			public Type getOriginType() {
-				return originType;
-			}
+            public Type getOriginType() {
+                return originType;
+            }
 
-			public void setOriginType(Type originType) {
-				this.originType = originType;
-			}
-		}
+            public void setOriginType(Type originType) {
+                this.originType = originType;
+            }
+        }
 
         static class Method {
             private Type originType;
