@@ -279,15 +279,15 @@ class ClassTable {
             int startNum = -Math.max(t1In.size(), t2In.size());
             int startT1Num = startNum + t1In.size();
             int startT2Num = startNum + t2In.size();
-            while(true){
+            while (true) {
                 // 如果其中有任何一个指针超过了,则都找不到共同的parent type
-                if(startT1Num > (t1In.size() - 1) || startT2Num > (t2In.size() - 1)){
+                if (startT1Num > (t1In.size() - 1) || startT2Num > (t2In.size() - 1)) {
                     break;
                 }
-                if(startT1Num >= 0 && startT2Num >= 0){
+                if (startT1Num >= 0 && startT2Num >= 0) {
                     CoolClass.Type ct1 = t1In.get(startT1Num);
                     CoolClass.Type ct2 = t2In.get(startT2Num);
-                    if(ct1.getClassName().equals(ct2.className)){
+                    if (ct1.getClassName().equals(ct2.className)) {
                         return new CoolClass.Type(ct1.getClassName());
                     }
                 }
@@ -298,7 +298,66 @@ class ClassTable {
         return null;
     }
 
-    public CoolClass.Type lub(){
+    /**
+     * 找寻多个子类的共同父类
+     * @param types
+     * @return
+     */
+    public CoolClass.Type lub(List<CoolClass.Type> types) {
+        if (types != null) {
+            // 找到其中具有最深的继承结构的类
+            List<CoolClass> coolClasses = new ArrayList<>();
+            List<List<CoolClass.Type>> inheritedTypeList = new ArrayList<>();
+
+            int classMaxDepth = 0;
+            // 遍历获取所有子类的父类结构
+            for (CoolClass.Type type : types) {
+                CoolClass coolClass = this.coolClassMap.get(type.className);
+                if (coolClass == null) {
+                    return null;
+                }
+                List<CoolClass.Type> typeList = coolClass.getInheritedTypes();
+                if (typeList.size() > classMaxDepth) {
+                    classMaxDepth = typeList.size();
+                }
+                coolClasses.add(coolClass);
+                inheritedTypeList.add(coolClass.getInheritedTypes());
+            }
+            // 逐个分析同等depth的parent类,如果在同等深度类都相等,那么就是最终的返回结果
+            int startIndex = -classMaxDepth;
+            // 当超过了继承列表中最长的那个列表的最大下标的时候,整个循环停止
+            while (startIndex >= classMaxDepth) {
+                boolean match = false;
+                CoolClass.Type flag = null;
+                for (List<CoolClass.Type> list : inheritedTypeList) {
+                    int currentIndex = startIndex + list.size();
+                    if (currentIndex >= 0) {
+                        // 先赋值给flag第一个类型
+                        if (flag == null) {
+                            flag = list.get(currentIndex);
+                            continue;
+                        }
+                        //继续匹配类型是否一致
+                        else if (flag.equals(list.get(currentIndex))) {
+                            match = true;
+                            continue;
+                        }
+                        // 有一个类型不属于所有子类的父类型就退出循环
+                        else if (!flag.equals(list.get(currentIndex))) {
+                            break;
+                        }
+                    } else {
+                        // 有一个子类深度不够
+                        break;
+                    }
+                }
+                // 如果最终match的结果为true,说明找到了共同的父类,那么就退出循环,直接返回类型
+                if (match)
+                    return flag;
+                // 推动指针移动
+                startIndex++;
+            }
+        }
         return null;
     }
 
