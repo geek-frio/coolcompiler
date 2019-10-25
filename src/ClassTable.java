@@ -139,54 +139,60 @@ class ClassTable {
      */
     public void analyzeInheritsStructure() {
         for (Map.Entry<String, class_c> e : classcMap.entrySet()) {
-            // 获取当前需要完善父类信息的类的名称
-            String className = e.getKey();
-            // 对于之前已经作为别的子类的父类已经被分析过了, 则不需要进行再一次的重新分析
-            if (coolClassMap.get(className) != null) {
-                continue;
-            }
-            // 分析每个 Class 的属性和方法列表, 向上寻找父类, 获取属性和方法信息
-            // 初始化栈数据结构, 存放每一层父类信息
-            Stack<class_c> stack = new Stack<>();
-            // 生成继承结构的classc的栈,从头到底为最上层的父类到类自己
-            assembleInheriteClassStack(e, stack);
-            // 开始进入 ClassTable.CoolClass 组装阶段
-            // 初始化 attrName -> Attr 映射 attrsMap
-            TreeMap<String, CoolClass.Attr> attrsMap = new TreeMap<>();
-            // 初始化 methodName -> Method 映射 methodMap
-            TreeMap<String, CoolClass.Method> methodsMap = new TreeMap<>();
-            // 初始化 inheritedTypes
-            List<CoolClass.Type> inheritedTypes = new ArrayList<>();
-            // "循环" pop stack 如果不为空
-            class_c top = stack.pop();
-            while (top != null) {
-                inheritedTypes.add(new CoolClass.Type(top.name.toString()));
-                //  获取当前正在操作的类
-                String currentClassName = top.getName().toString();
-                // 	循环遍历class_c的所有feature
-                Enumeration enumeration = top.features.getElements();
-                while (enumeration.hasMoreElements()) {
-                    Feature feature = (Feature) enumeration.nextElement();
-                    // 如果feature是attr的feature
-                    if (feature instanceof attr) {
-                        attrsAssembleOperation(attrsMap, currentClassName, feature);
-                    }
-                    // 如果feature是method的feature
-                    else if (feature instanceof method) {
-                        methodsAssembleOperation(methodsMap, currentClassName, feature);
-                    } else {
-                        throw new RuntimeException(String.format("illegal type!, linenum:%d", feature.lineNumber));
-                    }
+            try {
+                // 获取当前需要完善父类信息的类的名称
+                String className = e.getKey();
+                // 对于之前已经作为别的子类的父类已经被分析过了, 则不需要进行再一次的重新分析
+                if (coolClassMap.get(className) != null) {
+                    continue;
                 }
-                // 在栈从上往下不断进行Pop父类的过程中,这些父类也应该不需要再次进行分析了
-                parentCoolClassGen(attrsMap, methodsMap, currentClassName, inheritedTypes);
-                // 推出栈头部的class进行继续分析
-                top = stack.pop();
+                // 分析每个 Class 的属性和方法列表, 向上寻找父类, 获取属性和方法信息
+                // 初始化栈数据结构, 存放每一层父类信息
+                Stack<class_c> stack = new Stack<>();
+                // 生成继承结构的classc的栈,从头到底为最上层的父类到类自己
+                assembleInheriteClassStack(e, stack);
+                // 开始进入 ClassTable.CoolClass 组装阶段
+                // 初始化 attrName -> Attr 映射 attrsMap
+                TreeMap<String, CoolClass.Attr> attrsMap = new TreeMap<>();
+                // 初始化 methodName -> Method 映射 methodMap
+                TreeMap<String, CoolClass.Method> methodsMap = new TreeMap<>();
+                // 初始化 inheritedTypes
+                List<CoolClass.Type> inheritedTypes = new ArrayList<>();
+                // "循环" pop stack 如果不为空
+                class_c top = stack.pop();
+                while (top != null) {
+                    inheritedTypes.add(new CoolClass.Type(top.name.toString()));
+                    //  获取当前正在操作的类
+                    String currentClassName = top.getName().toString();
+                    // 	循环遍历class_c的所有feature
+                    Enumeration enumeration = top.features.getElements();
+                    while (enumeration.hasMoreElements()) {
+                        Feature feature = (Feature) enumeration.nextElement();
+                        // 如果feature是attr的feature
+                        if (feature instanceof attr) {
+                            attrsAssembleOperation(attrsMap, currentClassName, feature);
+                        }
+                        // 如果feature是method的feature
+                        else if (feature instanceof method) {
+                            methodsAssembleOperation(methodsMap, currentClassName, feature);
+                        } else {
+                            throw new RuntimeException("Will never come here!");
+                        }
+                    }
+                    // 在栈从上往下不断进行Pop父类的过程中,这些父类也应该不需要再次进行分析了
+                    parentCoolClassGen(attrsMap, methodsMap, currentClassName, inheritedTypes);
+                    // 推出栈头部的class进行继续分析
+                    top = stack.pop();
+                }
+                //	使用 attrs, attrsMap, methodMap生成新的CoolClass对象
+                CoolClass coolClass = new CoolClass(new CoolClass.Type(className), attrsMap, methodsMap, inheritedTypes);
+                // 将 ClassTable.CoolClass 对象和名称映射放入 coolClassMap中去
+                coolClassMap.put(className, coolClass);
+            } catch (CoolClassFormedException e1) {
+                PrintStream printStream = semantError(e.getValue().filename, e1.linenum);
+                printStream.println(e1.getMessage());
+                throw new RuntimeException();
             }
-            //	使用 attrs, attrsMap, methodMap生成新的CoolClass对象
-            CoolClass coolClass = new CoolClass(new CoolClass.Type(className), attrsMap, methodsMap, inheritedTypes);
-            // 将 ClassTable.CoolClass 对象和名称映射放入 coolClassMap中去
-            coolClassMap.put(className, coolClass);
         }
     }
 
@@ -218,7 +224,7 @@ class ClassTable {
                 attr.setName(fc.name.toString());
                 // 校验方法的参数的类型不能为SELF_TYPE
                 if (fc.type_decl.equals(TreeConstants.SELF_TYPE)) {
-                    throw new RuntimeException(String.format("arg:%s, type should not be SELF_TYPE, linenum:%d", attr.getName(), fc.lineNumber));
+                    throw new CoolClassFormedException(String.format("arg:%s, type should not be SELF_TYPE", attr.getName()), fc.lineNumber);
                 }
                 attr.setType(new CoolClass.Type(fc.type_decl.toString()));
                 args.add(attr);
@@ -231,11 +237,11 @@ class ClassTable {
         if ((old = methodsMap.get(methodName)) != null) {
             // 方法在子类中重新实现,但是参数或者返回类型并不与父类相匹配
             if (!old.equals(method)) {
-                throw new RuntimeException(String.format("method:%s redifine failed, linenum:%d", methodName, feature.lineNumber));
+                throw new CoolClassFormedException(String.format("method:%s redifine failed", methodName), feature.lineNumber);
             }
             // IO 基础类的方法不能被重新实现
             if (old.getOriginType().className.equals(TreeConstants.IO.toString())) {
-                throw new RuntimeException(String.format("IO method can not be redifined, linenum:%d", feature.lineNumber));
+                throw new CoolClassFormedException(String.format("IO method can not be redifined"), node.lineNumber);
             }
             // 子类进行方法的重新声明
             methodsMap.put(methodName, method);
@@ -254,7 +260,7 @@ class ClassTable {
         attr.setOriginType(new CoolClass.Type(originType));
         // 查看attrName -> Attr的映射关系是否已经存在,如果有,抛出 RuntimeException
         if (attrsMap.get(name) != null) {
-            throw new RuntimeException(String.format("attr:%s can not be redefined, linenum:%d", node.name.toString(), feature.lineNumber));
+            throw new CoolClassFormedException(String.format("attr:%s can not be redefined", node.name.toString()), feature.lineNumber);
         }
         //创建attrName -> Attr的映射关系
         attrsMap.put(name, attr);
@@ -300,6 +306,7 @@ class ClassTable {
 
     /**
      * 找寻多个子类的共同父类
+     *
      * @param types
      * @return
      */
@@ -376,12 +383,12 @@ class ClassTable {
             if (parentName.equals(TreeConstants.Int.toString())
                     || parentName.equals(TreeConstants.Str.toString())
                     || parentName.equals(TreeConstants.Bool.toString())) {
-                throw new RuntimeException(String.format("%s can not be inherited, linenum:%d", parentName, cls.lineNumber));
+                throw new CoolClassFormedException(String.format("%s can not be inherited", parentName), cls.lineNumber);
             }
             class_c parent = classcMap.get(parentName);
             // 如果找不到 class 的对应的父类, 应该抛出异常
             if (parent == null) {
-                throw new RuntimeException(String.format("% class does not exists, linenum", cls.getParent(), cls.lineNumber));
+                throw new CoolClassFormedException(String.format("% class does not exists", cls.getParent()), cls.lineNumber);
             }
             // 否则,将新发现的父类加入栈,操作栈头的父类
             else {
@@ -430,6 +437,17 @@ class ClassTable {
      */
     public PrintStream semantError(AbstractSymbol filename, TreeNode t) {
         errorStream.print(filename + ":" + t.getLineNumber() + ": ");
+        return semantError();
+    }
+
+    public PrintStream semantError(AbstractSymbol filename, int linenum) {
+        errorStream.print(filename + ":" + linenum + ": ");
+        return semantError();
+    }
+
+    public PrintStream semantError(AbstractSymbol filename, int linenum, String errMessage){
+        errorStream.print(filename + ":" + linenum + ": ");
+        errorStream.print(errMessage);
         return semantError();
     }
 
@@ -635,6 +653,23 @@ class ClassTable {
             public void setReturnType(Type returnType) {
                 this.returnType = returnType;
             }
+        }
+    }
+
+    static class CoolClassFormedException extends RuntimeException {
+        private class_c cls;
+        private String message;
+        private int linenum;
+
+        public CoolClassFormedException(class_c cls, String message, int linenum) {
+            this.cls = cls;
+            this.message = message;
+            this.linenum = linenum;
+        }
+
+        public CoolClassFormedException(String message, int linenum) {
+            this.message = message;
+            this.linenum = linenum;
         }
     }
 }

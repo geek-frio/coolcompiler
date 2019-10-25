@@ -214,19 +214,22 @@ class SymbolTable {
      * @param argTypes
      * @param method
      */
-    public boolean checkArguments(List<ClassTable.CoolClass.Type> argTypes, ClassTable.CoolClass.Method method) {
+    public boolean checkArguments(List<ClassTable.CoolClass.Type> argTypes, ClassTable.CoolClass.Method method, StringBuilder sb) {
         if(method == null){
-            // TODO 没有找到对应的方法
+            sb.append("Can not find the method:" + method.getMethodName());
+            return false;
         }
         // 校验参数数量是否相同
         if(argTypes.size() != method.getArgType().size()){
-            // TODO 方法的参数数量不匹配
+            sb.append(String.format("Method:%s Declaring args num is not equal to the real arguments", method.getMethodName()));
+            return false;
         }
         for (int i = 0; i < argTypes.size(); i++) {
             ClassTable.CoolClass.Type arg = argTypes.get(i);
             ClassTable.CoolClass.Type dclrArg = method.getArgType().get(i).getType();
             if(!this.getClassTable().checkSub(arg, dclrArg)){
-                // TODO 不为子类的异常处理
+                sb.append(String.format("Method:%s argument type is not identified to declaring type!", method.getMethodName()));
+                return false;
             }
         }
         return true;
