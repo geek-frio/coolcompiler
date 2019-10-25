@@ -377,6 +377,7 @@ class programc extends Program {
                 System.exit(1);
             }
         }catch (RuntimeException e){
+            e.printStackTrace();
             System.err.println("Compilation halted due to static semantic errors.");
             System.exit(1);
         }
@@ -1146,19 +1147,15 @@ class block extends Expression {
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         if (body != null) {
             List<ClassTable.CoolClass.Type> types = new ArrayList<>();
-            Enumeration elements;
-            while ((elements = this.body.getElements()).hasMoreElements()) {
+            Enumeration elements = body.getElements();
+            while (elements.hasMoreElements()) {
                 Expression expr = (Expression) elements.nextElement();
                 ClassTable.CoolClass.Type type = expr.semant0(symbolTable);
                 types.add(type);
             }
-            ClassTable.CoolClass.Type t = symbolTable.getClassTable().lub(types);
-            if (t == null) {
-                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber,
-                        "Can't find all the expression's common parent class in the block!");
-                return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
+            if(types.size() > 0){
+                return types.get(types.size() - 1);
             }
-            return t;
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
     }

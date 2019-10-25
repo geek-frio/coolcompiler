@@ -160,7 +160,7 @@ class ClassTable {
                 List<CoolClass.Type> inheritedTypes = new ArrayList<>();
                 // "循环" pop stack 如果不为空
                 class_c top = stack.pop();
-                while (top != null) {
+                while (true) {
                     inheritedTypes.add(new CoolClass.Type(top.name.toString()));
                     //  获取当前正在操作的类
                     String currentClassName = top.getName().toString();
@@ -182,6 +182,9 @@ class ClassTable {
                     // 在栈从上往下不断进行Pop父类的过程中,这些父类也应该不需要再次进行分析了
                     parentCoolClassGen(attrsMap, methodsMap, currentClassName, inheritedTypes);
                     // 推出栈头部的class进行继续分析
+                    if (stack.isEmpty()) {
+                        break;
+                    }
                     top = stack.pop();
                 }
                 //	使用 attrs, attrsMap, methodMap生成新的CoolClass对象
@@ -229,6 +232,7 @@ class ClassTable {
                 attr.setType(new CoolClass.Type(fc.type_decl.toString()));
                 args.add(attr);
             }
+            method.setArgType(args);
         }
         String methodName = node.name.toString();
         method.setMethodName((node.name.toString()));
@@ -243,9 +247,9 @@ class ClassTable {
             if (old.getOriginType().className.equals(TreeConstants.IO.toString())) {
                 throw new CoolClassFormedException(String.format("IO method can not be redifined"), node.lineNumber);
             }
-            // 子类进行方法的重新声明
-            methodsMap.put(methodName, method);
         }
+        // 子类进行方法的重新声明
+        methodsMap.put(methodName, method);
     }
 
     private void attrsAssembleOperation(TreeMap<String, CoolClass.Attr> attrsMap, String currentClassName, Feature feature) {
@@ -318,7 +322,8 @@ class ClassTable {
 
             int classMaxDepth = 0;
             // 遍历获取所有子类的父类结构
-            for (CoolClass.Type type : types) {
+            for (int i = types.size() - 1; i >= 0; i--) {
+                CoolClass.Type type = types.get(i);
                 CoolClass coolClass = this.coolClassMap.get(type.className);
                 if (coolClass == null) {
                     return null;
@@ -333,10 +338,11 @@ class ClassTable {
             // 逐个分析同等depth的parent类,如果在同等深度类都相等,那么就是最终的返回结果
             int startIndex = -classMaxDepth;
             // 当超过了继承列表中最长的那个列表的最大下标的时候,整个循环停止
-            while (startIndex >= classMaxDepth) {
+            while (startIndex < classMaxDepth) {
                 boolean match = false;
                 CoolClass.Type flag = null;
-                for (List<CoolClass.Type> list : inheritedTypeList) {
+                for(int i = inheritedTypeList.size() - 1; i >= 0; i--){
+                    List<CoolClass.Type> list = inheritedTypeList.get(i);
                     int currentIndex = startIndex + list.size();
                     if (currentIndex >= 0) {
                         // 先赋值给flag第一个类型
@@ -373,7 +379,7 @@ class ClassTable {
         class_c cls = nameClassc.getValue();
         stack.push(cls);
         // 2.1 "循环" 向上父类结构, 将父类信息放入栈结构中
-        while (cls.getParent() != null) {
+        while (cls.getParent() != null && !cls.getParent().equals(TreeConstants.No_class)) {
             String parentName = cls.getParent().toString();
             /**
              * Base class 约束校验
@@ -445,7 +451,7 @@ class ClassTable {
         return semantError();
     }
 
-    public PrintStream semantError(AbstractSymbol filename, int linenum, String errMessage){
+    public PrintStream semantError(AbstractSymbol filename, int linenum, String errMessage) {
         errorStream.print(filename + ":" + linenum + ": ");
         errorStream.print(errMessage);
         return semantError();
@@ -477,7 +483,7 @@ class ClassTable {
      * @return
      */
     public boolean checkSub(CoolClass.Type t1, CoolClass.Type t2) {
-        CoolClass sub = coolClassMap.get(t1);
+        CoolClass sub = coolClassMap.get(t1.className);
         for (CoolClass.Type t : sub.inheritedTypes) {
             if (t.equals(t2)) {
                 return true;

@@ -19,24 +19,35 @@ ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
 PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
+import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+
 import java_cup.runtime.Symbol;
 
-/** Static semantics driver class */
+/**
+ * Static semantics driver class
+ */
 class Semant {
 
-    /** Reads AST from from consosle, and outputs the new AST */
+    /**
+     * Reads AST from from consosle, and outputs the new AST
+     */
     public static void main(String[] args) {
-	args = Flags.handleFlags(args);
-	try {
-	    ASTLexer lexer = new ASTLexer(new InputStreamReader(System.in));
-	    ASTParser parser = new ASTParser(lexer);
-	    Object result = parser.parse().value;	
-	    ((Program)result).semant();
-	    ((Program)result).dump_with_types(System.out, 0);
-	} catch (Exception ex) {
-	    ex.printStackTrace(System.err);
-	}
+        args = Flags.handleFlags(args);
+        InputStream in = Semant.class.getClassLoader()
+                .getResourceAsStream("TestInput");
+        try {
+            long t1 = System.currentTimeMillis();
+            ASTLexer lexer = new ASTLexer(new InputStreamReader(in));
+            ASTParser parser = new ASTParser(lexer);
+            Object result = parser.parse().value;
+            ((Program) result).semant();
+            ((Program) result).dump_with_types(System.out, 0);
+            System.err.println("all time:" + (System.currentTimeMillis() - t1));
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
     }
 }
