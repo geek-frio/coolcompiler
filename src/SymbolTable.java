@@ -189,7 +189,7 @@ class SymbolTable {
         List<ClassTable.CoolClass.Type> argTypes = new ArrayList<>();
         while (enumeration.hasMoreElements()) {
             Expression argExpression = (Expression) enumeration.nextElement();
-            ClassTable.CoolClass.Type argType = argExpression.semant(this);
+            ClassTable.CoolClass.Type argType = argExpression.semant0(this);
             // TODO 校验每个参数的类型,不能为SELF_TYPE
             argTypes.add(argType);
         }
@@ -202,7 +202,7 @@ class SymbolTable {
      * @return
      */
     public ClassTable.CoolClass.Type typeCheckingExpression(Expression expr) {
-        ClassTable.CoolClass.Type callerType = expr.semant(this);
+        ClassTable.CoolClass.Type callerType = expr.semant0(this);
         if (callerType.getClassName().equals(TreeConstants.SELF_TYPE.toString())) {
             callerType = new ClassTable.CoolClass.Type(this.getCurrentClassNode().name.toString());
         }

@@ -208,6 +208,12 @@ abstract class Expression extends TreeNode {
         }
     }
 
+    public ClassTable.CoolClass.Type semant0(SymbolTable symbolTable){
+        ClassTable.CoolClass.Type type = this.semant(symbolTable);
+        this.type = AbstractTable.idtable.addString(type.getClassName());
+        return this.semant(symbolTable);
+    }
+
 }
 
 /**
@@ -445,7 +451,6 @@ class class_c extends Class_ {
         out.println(Utilities.pad(n + 2) + ")");
     }
 
-    @Override
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         for (Enumeration e = features.getElements(); e.hasMoreElements(); ) {
             ((Feature) e.nextElement()).semant(symbolTable);
@@ -590,7 +595,6 @@ class attr extends Feature {
         init.dump_with_types(out, n + 2);
     }
 
-    @Override
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         // atrr type checking 分两种情况,
         // 没有 init expression 的情况
@@ -605,7 +609,7 @@ class attr extends Feature {
         symbolTable.enterScope();
         symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString()));
         // 3), 执行TypeChecking init的Expression
-        ClassTable.CoolClass.Type returnType = init.semant(symbolTable);
+        ClassTable.CoolClass.Type returnType = init.semant0(symbolTable);
         symbolTable.exitScope();
         // 4), 返回类型, 查询返回类型是否为 T0 的子类或者等于 T0
         if (!symbolTable.getClassTable().checkSub(returnType, type)) {
@@ -708,7 +712,7 @@ class branch extends Case {
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
         symbolTable.addId(name, new ClassTable.CoolClass.Type(type_decl.toString()));
-        ClassTable.CoolClass.Type type = expr.semant(symbolTable);
+        ClassTable.CoolClass.Type type = expr.semant0(symbolTable);
         symbolTable.exitScope();
         return type;
     }
@@ -756,7 +760,7 @@ class assign extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t0 = (ClassTable.CoolClass.Type) symbolTable.lookup(name);
-        ClassTable.CoolClass.Type t1 = expr.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = expr.semant0(symbolTable);
         if (!symbolTable.getClassTable().checkSub(t1, t0)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "Assign expr type should be the subtype of declaring type!");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
@@ -973,13 +977,13 @@ class cond extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type type = pred.semant(symbolTable);
+        ClassTable.CoolClass.Type type = pred.semant0(symbolTable);
         if (type == null || !type.getClassName().equals(TreeConstants.Bool.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "if condition expression type should be boolean");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
-        ClassTable.CoolClass.Type ifBranchType = then_exp.semant(symbolTable);
-        ClassTable.CoolClass.Type elseBranchType = else_exp.semant(symbolTable);
+        ClassTable.CoolClass.Type ifBranchType = then_exp.semant0(symbolTable);
+        ClassTable.CoolClass.Type elseBranchType = else_exp.semant0(symbolTable);
         // 取两者往上的共同父类
         ClassTable.CoolClass.Type lubType = symbolTable.getClassTable().lub(ifBranchType, elseBranchType);
         if (lubType == null) {
@@ -1032,13 +1036,13 @@ class loop extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type condType = pred.semant(symbolTable);
+        ClassTable.CoolClass.Type condType = pred.semant0(symbolTable);
         if (!condType.getClassName().equals(TreeConstants.Bool.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "while condition's type should be boolean");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
         // 只做执行,不依赖这个结果
-        body.semant(symbolTable);
+        body.semant0(symbolTable);
         return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
     }
 
@@ -1087,7 +1091,7 @@ class typcase extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t0 = expr.semant(symbolTable);
+        ClassTable.CoolClass.Type t0 = expr.semant0(symbolTable);
         List<ClassTable.CoolClass.Type> types = new ArrayList<>();
         // 获取cases的所有types数组列表
         Enumeration enumeration;
@@ -1145,7 +1149,7 @@ class block extends Expression {
             Enumeration elements;
             while ((elements = this.body.getElements()).hasMoreElements()) {
                 Expression expr = (Expression) elements.nextElement();
-                ClassTable.CoolClass.Type type = expr.semant(symbolTable);
+                ClassTable.CoolClass.Type type = expr.semant0(symbolTable);
                 types.add(type);
             }
             ClassTable.CoolClass.Type t = symbolTable.getClassTable().lub(types);
@@ -1221,7 +1225,7 @@ class let extends Expression {
         }
         // 如果init expr不为空,那么我们应该校验的是这个expr返回的类型是否和声明的类型一致
         if (!(init instanceof no_expr)) {
-            ClassTable.CoolClass.Type initType = init.semant(symbolTable);
+            ClassTable.CoolClass.Type initType = init.semant0(symbolTable);
             if (!symbolTable.getClassTable().checkSub(initType, t0)) {
                 symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, init.lineNumber,
                         "Init Expression's type should be subtype of declaration's type");
@@ -1231,7 +1235,7 @@ class let extends Expression {
         // 加入新声明的 x:T0 到 scope 中去
         symbolTable.enterScope();
         symbolTable.addId(identifier, t0);
-        ClassTable.CoolClass.Type t2 = body.semant(symbolTable);
+        ClassTable.CoolClass.Type t2 = body.semant0(symbolTable);
         symbolTable.exitScope();
         return t2;
     }
@@ -1279,8 +1283,8 @@ class plus extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1337,8 +1341,8 @@ class sub extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1394,8 +1398,8 @@ class mul extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1451,8 +1455,8 @@ class divide extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1504,7 +1508,7 @@ class neg extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t = e1.semant(symbolTable);
+        ClassTable.CoolClass.Type t = e1.semant0(symbolTable);
         if (!t.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Neg expression's has to be Int");
@@ -1556,8 +1560,8 @@ class lt extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1613,8 +1617,8 @@ class eq extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())
                 && !t1.getClassName().equals(TreeConstants.Str.toString())
                 && !t1.getClassName().equals(TreeConstants.Bool.toString())) {
@@ -1680,8 +1684,8 @@ class leq extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
-        ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
+        ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
+        ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
         if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Left expression's type should be Int");
@@ -1732,7 +1736,7 @@ class comp extends Expression {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
-        ClassTable.CoolClass.Type type = e1.semant(symbolTable);
+        ClassTable.CoolClass.Type type = e1.semant0(symbolTable);
         if (!type.getClassName().equals(TreeConstants.Bool.toString())) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Expression's type should be boolean");
@@ -1951,7 +1955,7 @@ class isvoid extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         // isvoid 返回类型应该是布尔类型
-        e1.semant(symbolTable);
+        e1.semant0(symbolTable);
         return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
     }
 }
