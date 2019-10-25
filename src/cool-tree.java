@@ -6,6 +6,7 @@
 //
 //////////////////////////////////////////////////////////
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.io.PrintStream;
@@ -500,6 +501,41 @@ class method extends Feature {
         }
         dump_AbstractSymbol(out, n + 2, return_type);
         expr.dump_with_types(out, n + 2);
+    }
+
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        // 获取当前正在TypeChecking的CoolClass
+        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(symbolTable.getCurrentClassNode().name.toString());
+        // 需要将参数信息加入到SymbolTable中去
+        // 提取每个参数的类型
+        symbolTable.enterScope();
+        // 加入self的type映射关系
+        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().getName().toString()));
+        Enumeration e = formals.getElements();
+        while (e.hasMoreElements()) {
+            formalc fc = (formalc) e.nextElement();
+            String type = fc.type_decl.toString();
+            if (type.equals(TreeConstants.SELF_TYPE.toString())) {
+                // TODO 方法参数不能传递 Self Type的类型
+            }
+            symbolTable.addId(fc.name, new ClassTable.CoolClass.Type(fc.type_decl.toString()));
+        }
+        // method return type
+        ClassTable.CoolClass.Type returnType;
+        if(this.return_type.toString().equals(TreeConstants.SELF_TYPE.toString())){
+            returnType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }else{
+            returnType = new ClassTable.CoolClass.Type(return_type.toString());
+        }
+        // type checking type
+        ClassTable.CoolClass.Type checkingType = symbolTable.typeCheckingExpression(expr);
+        // 方法的body返回类型应该为方法定义类型的子类型
+        if(!symbolTable.getClassTable().checkSub(checkingType, returnType)){
+            // TODO
+        }
+        symbolTable.exitScope();
+        // 方法体没有返回类型
+        return null;
     }
 
 }
@@ -1226,13 +1262,13 @@ class plus extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Int.toString());
@@ -1280,13 +1316,13 @@ class sub extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Int.toString());
@@ -1333,13 +1369,13 @@ class mul extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Int.toString());
@@ -1386,13 +1422,13 @@ class divide extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Int.toString());
@@ -1435,9 +1471,9 @@ class neg extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t = e1.semant(symbolTable);
-        if(!t.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO neg 操作符必须为Int类型
         }
         return t;
@@ -1485,13 +1521,13 @@ class lt extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
@@ -1538,20 +1574,20 @@ class eq extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())
-            && !t1.getClassName().equals(TreeConstants.Str.toString())
-            && !t1.getClassName().equals(TreeConstants.Bool.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())
+                && !t1.getClassName().equals(TreeConstants.Str.toString())
+                && !t1.getClassName().equals(TreeConstants.Bool.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())
                 && !t2.getClassName().equals(TreeConstants.Str.toString())
-                && !t2.getClassName().equals(TreeConstants.Bool.toString())){
+                && !t2.getClassName().equals(TreeConstants.Bool.toString())) {
             // TODO 右边的expression必须Int类型
         }
-        if(!t1.equals(t2)){
+        if (!t1.equals(t2)) {
             // TODO 两者的类型必须一致
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
@@ -1599,13 +1635,13 @@ class leq extends Expression {
         dump_type(out, n);
     }
 
-    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant(symbolTable);
-        if(!t1.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t1.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 左边的expression必须Int类型
         }
-        if(!t2.getClassName().equals(TreeConstants.Int.toString())){
+        if (!t2.getClassName().equals(TreeConstants.Int.toString())) {
             // TODO 右边的expression必须为Int类型
         }
         return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
@@ -1649,7 +1685,7 @@ class comp extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type type = e1.semant(symbolTable);
-        if(!type.getClassName().equals(TreeConstants.Bool.toString())){
+        if (!type.getClassName().equals(TreeConstants.Bool.toString())) {
             //TODO 必须要为布尔类型,否则报错
         }
         return type;

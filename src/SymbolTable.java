@@ -218,6 +218,10 @@ class SymbolTable {
         if(method == null){
             // TODO 没有找到对应的方法
         }
+        // 校验参数数量是否相同
+        if(argTypes.size() != method.getArgType().size()){
+            // TODO 方法的参数数量不匹配
+        }
         for (int i = 0; i < argTypes.size(); i++) {
             ClassTable.CoolClass.Type arg = argTypes.get(i);
             ClassTable.CoolClass.Type dclrArg = method.getArgType().get(i).getType();
