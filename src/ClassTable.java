@@ -11,9 +11,9 @@ class ClassTable {
     private PrintStream errorStream;
     private Classes classes;
     // 类名和AST节点映射关系
-    private Map<String, class_c> classcMap = new HashMap<>();
+    private Map<String, class_c> classcMap = new HashMap<String, class_c>();
     // 类名和抽象类映射关系
-    private Map<String, CoolClass> coolClassMap = new HashMap();
+    private Map<String, CoolClass> coolClassMap = new HashMap<String, CoolClass>();
 
     public void init() {
         installBasicClasses();
@@ -148,16 +148,16 @@ class ClassTable {
                 }
                 // 分析每个 Class 的属性和方法列表, 向上寻找父类, 获取属性和方法信息
                 // 初始化栈数据结构, 存放每一层父类信息
-                Stack<class_c> stack = new Stack<>();
+                Stack<class_c> stack = new Stack<class_c>();
                 // 生成继承结构的classc的栈,从头到底为最上层的父类到类自己
                 assembleInheriteClassStack(e, stack);
                 // 开始进入 ClassTable.CoolClass 组装阶段
                 // 初始化 attrName -> Attr 映射 attrsMap
-                TreeMap<String, CoolClass.Attr> attrsMap = new TreeMap<>();
+                TreeMap<String, CoolClass.Attr> attrsMap = new TreeMap<String, CoolClass.Attr>();
                 // 初始化 methodName -> Method 映射 methodMap
-                TreeMap<String, CoolClass.Method> methodsMap = new TreeMap<>();
+                TreeMap<String, CoolClass.Method> methodsMap = new TreeMap<String, CoolClass.Method>();
                 // 初始化 inheritedTypes
-                List<CoolClass.Type> inheritedTypes = new ArrayList<>();
+                List<CoolClass.Type> inheritedTypes = new ArrayList<CoolClass.Type>();
                 // "循环" pop stack 如果不为空
                 class_c top = stack.pop();
                 while (true) {
@@ -203,7 +203,7 @@ class ClassTable {
         // 这里是shallow copy,共用一套key, value
         TreeMap<String, CoolClass.Attr> cloneAttrMap = (TreeMap<String, CoolClass.Attr>) attrsMap.clone();
         TreeMap<String, CoolClass.Method> cloneMethodMap = (TreeMap<String, CoolClass.Method>) methodsMap.clone();
-        List<CoolClass.Type> cloneList = new ArrayList<>();
+        List<CoolClass.Type> cloneList = new ArrayList<CoolClass.Type>();
         for (CoolClass.Type t : inheritedTypes) {
             cloneList.add(t);
         }
@@ -220,7 +220,7 @@ class ClassTable {
         //获取组装参数(结合currentClassName)
         if (node.formals != null) {
             Enumeration formalE = node.formals.getElements();
-            List<CoolClass.Attr> args = new ArrayList<>();
+            List<CoolClass.Attr> args = new ArrayList<CoolClass.Attr>();
             while (formalE.hasMoreElements()) {
                 formalc fc = (formalc) formalE.nextElement();
                 CoolClass.Attr attr = new CoolClass.Attr();
@@ -317,8 +317,8 @@ class ClassTable {
     public CoolClass.Type lub(List<CoolClass.Type> types) {
         if (types != null) {
             // 找到其中具有最深的继承结构的类
-            List<CoolClass> coolClasses = new ArrayList<>();
-            List<List<CoolClass.Type>> inheritedTypeList = new ArrayList<>();
+            List<CoolClass> coolClasses = new ArrayList<CoolClass>();
+            List<List<CoolClass.Type>> inheritedTypeList = new ArrayList<List<CoolClass.Type>>();
 
             int classMaxDepth = 0;
             // 遍历获取所有子类的父类结构

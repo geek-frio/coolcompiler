@@ -7,10 +7,7 @@
 //////////////////////////////////////////////////////////
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Defines simple phylum Program
@@ -453,9 +450,18 @@ class class_c extends Class_ {
     }
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
+        symbolTable.enterScope();
+        // 遍历所有属性事先加入scope中去
+        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(this.getName().toString());
+        for(Map.Entry<String, ClassTable.CoolClass.Attr> entry : coolClass.getAttrMap().entrySet()){
+            AbstractSymbol identifier = AbstractTable.idtable.addString(entry.getKey());
+            ClassTable.CoolClass.Type type = entry.getValue().getType();
+            symbolTable.addId(identifier, type);
+        }
         for (Enumeration e = features.getElements(); e.hasMoreElements(); ) {
             ((Feature) e.nextElement()).semant(symbolTable);
         }
+        symbolTable.exitScope();
         return null;
     }
 
@@ -1104,7 +1110,7 @@ class typcase extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t0 = expr.semant0(symbolTable);
-        List<ClassTable.CoolClass.Type> types = new ArrayList<>();
+        List<ClassTable.CoolClass.Type> types = new ArrayList<ClassTable.CoolClass.Type>();
         // 获取cases的所有types数组列表
         Enumeration enumeration;
         while ((enumeration = cases.getElements()).hasMoreElements()) {
@@ -1157,7 +1163,7 @@ class block extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         if (body != null) {
-            List<ClassTable.CoolClass.Type> types = new ArrayList<>();
+            List<ClassTable.CoolClass.Type> types = new ArrayList<ClassTable.CoolClass.Type>();
             Enumeration elements = body.getElements();
             while (elements.hasMoreElements()) {
                 Expression expr = (Expression) elements.nextElement();

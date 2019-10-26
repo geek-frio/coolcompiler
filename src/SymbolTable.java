@@ -131,13 +131,6 @@ class SymbolTable {
             Object info = ((Hashtable) tbl.elementAt(i)).get(sym);
             if (info != null) return info;
         }
-        // 查询class的本地全局属性(也包含父类的属性值的查询), 看是否存在
-        String identifier = sym.toString();
-        ClassTable.CoolClass coolClass = classTable.getCoolClass(this.currentClassNode.getName().toString());
-        ClassTable.CoolClass.Attr attr = coolClass.getGlobalO(identifier);
-        if(attr != null){
-        	return attr.getType();
-		}
         return null;
     }
 
@@ -186,7 +179,7 @@ class SymbolTable {
      */
     public List<ClassTable.CoolClass.Type> typeCheckMethodArguments(Expressions expressions) {
         Enumeration enumeration = expressions.getElements();
-        List<ClassTable.CoolClass.Type> argTypes = new ArrayList<>();
+        List<ClassTable.CoolClass.Type> argTypes = new ArrayList<ClassTable.CoolClass.Type>();
         while (enumeration.hasMoreElements()) {
             Expression argExpression = (Expression) enumeration.nextElement();
             ClassTable.CoolClass.Type argType = argExpression.semant0(this);

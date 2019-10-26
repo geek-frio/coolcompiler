@@ -19,12 +19,8 @@ ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
 PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.IOException;
-
-import java_cup.runtime.Symbol;
 
 /**
  * Static semantics driver class
