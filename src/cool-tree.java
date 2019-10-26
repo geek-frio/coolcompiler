@@ -371,12 +371,12 @@ class programc extends Program {
             // 如果有异常, 退出执行状态
             if (classTable.errors()) {
                 System.err.println("Compilation halted due to static semantic errors.");
-                System.exit(1);
+//                System.exit(1);
             }
         }catch (RuntimeException e){
             e.printStackTrace();
             System.err.println("Compilation halted due to static semantic errors.");
-            System.exit(1);
+//            System.exit(1);
         }
     }
 
@@ -456,6 +456,9 @@ class class_c extends Class_ {
         for(Map.Entry<String, ClassTable.CoolClass.Attr> entry : coolClass.getAttrMap().entrySet()){
             AbstractSymbol identifier = AbstractTable.idtable.addString(entry.getKey());
             ClassTable.CoolClass.Type type = entry.getValue().getType();
+            if(entry.getKey().equals(TreeConstants.self.toString())){
+                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "self can not be used as identifier");
+            }
             symbolTable.addId(identifier, type);
         }
         for (Enumeration e = features.getElements(); e.hasMoreElements(); ) {

@@ -19,8 +19,8 @@ ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
 PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 */
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URISyntaxException;
 
 /**
  * Static semantics driver class
@@ -30,20 +30,80 @@ class Semant {
     /**
      * Reads AST from from consosle, and outputs the new AST
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws URISyntaxException, IOException {
         args = Flags.handleFlags(args);
-        InputStream in = Semant.class.getClassLoader()
-                .getResourceAsStream("TestInput");
+        long t1 = System.currentTimeMillis();
+        FileWriter fileWriter = new FileWriter(new File(System.getProperty("user.dir") + "/Time.output"), true);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
-            long t1 = System.currentTimeMillis();
-            ASTLexer lexer = new ASTLexer(new InputStreamReader(in));
+            InputStream inputStream;
+            if (Flags.input_file) {
+                inputStream = Semant.class.getResourceAsStream("TestInput");
+            } else {
+                inputStream = System.in;
+            }
+            // 增加重定向inputstream到暂存空间中去,如果发生了读取故障,可以读取到输入的input
+            TeeInputStream filterInputStream = new TeeInputStream(inputStream, byteArrayOutputStream);
+            // end
+            ASTLexer lexer = new ASTLexer(new InputStreamReader(filterInputStream));
             ASTParser parser = new ASTParser(lexer);
             Object result = parser.parse().value;
             ((Program) result).semant();
             ((Program) result).dump_with_types(System.out, 0);
-            System.err.println("all time:" + (System.currentTimeMillis() - t1));
+
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
+        } finally {
+            long usedTime = System.currentTimeMillis() - t1;
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write("all time:" + usedTime + "\n");
+            if(usedTime > 200){
+                bufferedWriter.write("Cost too long time, print the origin string....");
+                bufferedWriter.write("===========\n");
+                bufferedWriter.write(byteArrayOutputStream.toString());
+                bufferedWriter.write("===========\n");
+            }
+            bufferedWriter.flush();
+            bufferedWriter.close();
+        }
+    }
+
+    /**
+     * 分支流
+     */
+    static class TeeInputStream extends FilterInputStream {
+        OutputStream branchStream;
+
+        protected TeeInputStream(InputStream in, OutputStream outputStream) {
+            super(in);
+            this.branchStream = outputStream;
+        }
+
+        @Override
+        public int read() throws IOException {
+            final int ch = super.read();
+            if (ch != -1) {
+                branchStream.write(ch);
+            }
+            return ch;
+        }
+
+        @Override
+        public int read(final byte[] bts, final int st, final int end) throws IOException {
+            final int n = super.read(bts, st, end);
+            if (n != -1) {
+                branchStream.write(bts, st, n);
+            }
+            return n;
+        }
+
+        @Override
+        public int read(final byte[] bts) throws IOException {
+            final int n = super.read(bts);
+            if (n != -1) {
+                branchStream.write(bts, 0, n);
+            }
+            return n;
         }
     }
 }
