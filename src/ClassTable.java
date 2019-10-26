@@ -401,6 +401,10 @@ class ClassTable {
                 stack.push(parent);
                 // 将指针指向栈的头部
                 cls = parent;
+                // 自己已经是Object了,就不需要再往上进行分析了
+                if(parent.getName().equals(TreeConstants.Object_)){
+                    break;
+                }
             }
         }
         // 为最终栈头部的类默认 push 加入 Object 类的继承, 如果已经加入Object作为继承, 则不需要此项操作

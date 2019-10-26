@@ -4,7 +4,7 @@ _program
   _class
     Main
     Object
-    "./simplecase.test"
+    "./redefinedobject.test"
     (
     #1
     _method
@@ -17,53 +17,41 @@ _program
     )
   #1
   _class
-    A
     Object
-    "./simplecase.test"
+    Object
+    "./redefinedobject.test"
     (
     #1
     _attr
-      moo
-      Object
+      x
+      String
       #1
       _no_expr
       : _no_type
     #1
     _method
-      boo
+      foo
+      #1
+      _formal
+        x
+        Int
       Object
       #1
-      _block
+      _loop
         #1
-        _typcase
-          #1
-          _object
-            moo
-          : _no_type
-          #1
-          _branch
-            i
-            Int
-            #1
-            _object
-              i
-            : _no_type
-          #1
-          _branch
-            b
-            Bool
-            #1
-            _object
-              b
-            : _no_type
-          #1
-          _branch
-            s
-            String
-            #1
-            _object
-              s
-            : _no_type
+        _bool
+          1
+        : _no_type
+        #1
+        _object
+          x
         : _no_type
       : _no_type
+    )
+  #1
+  _class
+    A
+    Object
+    "./redefinedobject.test"
+    (
     )
