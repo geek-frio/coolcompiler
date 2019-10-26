@@ -1115,8 +1115,8 @@ class typcase extends Expression {
         ClassTable.CoolClass.Type t0 = expr.semant0(symbolTable);
         List<ClassTable.CoolClass.Type> types = new ArrayList<ClassTable.CoolClass.Type>();
         // 获取cases的所有types数组列表
-        Enumeration enumeration;
-        while ((enumeration = cases.getElements()).hasMoreElements()) {
+        Enumeration enumeration = cases.getElements();
+        while (enumeration.hasMoreElements()) {
             branch b = (branch) enumeration.nextElement();
             types.add(b.semant(symbolTable));
         }
