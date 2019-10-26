@@ -4,7 +4,7 @@ _program
   _class
     C
     Object
-    "good.cl"
+    "bad.cl"
     (
     #1
     _attr
@@ -60,28 +60,75 @@ _program
   _class
     Main
     Object
-    "good.cl"
+    "bad.cl"
     (
     #1
     _method
       main
       C
       #1
-      _dispatch
+      _block
+        #1
+        _dispatch
+          #1
+          _new
+            C
+          : _no_type
+          init
+          (
+          #1
+          _int
+            1
+          : _no_type
+          #1
+          _int
+            1
+          : _no_type
+          )
+        : _no_type
+        #1
+        _dispatch
+          #1
+          _new
+            C
+          : _no_type
+          init
+          (
+          #1
+          _int
+            1
+          : _no_type
+          #1
+          _bool
+            1
+          : _no_type
+          #1
+          _int
+            3
+          : _no_type
+          )
+        : _no_type
+        #1
+        _dispatch
+          #1
+          _new
+            C
+          : _no_type
+          iinit
+          (
+          #1
+          _int
+            1
+          : _no_type
+          #1
+          _bool
+            1
+          : _no_type
+          )
+        : _no_type
         #1
         _new
           C
         : _no_type
-        init
-        (
-        #1
-        _int
-          1
-        : _no_type
-        #1
-        _bool
-          1
-        : _no_type
-        )
       : _no_type
     )

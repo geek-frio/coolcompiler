@@ -215,10 +215,6 @@ class SymbolTable {
      * @param method
      */
     public boolean checkArguments(List<ClassTable.CoolClass.Type> argTypes, ClassTable.CoolClass.Method method, StringBuilder sb) {
-        if(method == null){
-            sb.append("Can not find the method:" + method.getMethodName());
-            return false;
-        }
         // 校验参数数量是否相同
         if(argTypes.size() != method.getArgType().size()){
             sb.append(String.format("Method:%s Declaring args num is not equal to the real arguments", method.getMethodName()));

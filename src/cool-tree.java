@@ -211,7 +211,7 @@ abstract class Expression extends TreeNode {
     public ClassTable.CoolClass.Type semant0(SymbolTable symbolTable){
         ClassTable.CoolClass.Type type = this.semant(symbolTable);
         this.type = AbstractTable.idtable.addString(type.getClassName());
-        return this.semant(symbolTable);
+        return type;
     }
 
 }
@@ -835,6 +835,10 @@ class static_dispatch extends Expression {
         // 从前面的调用方的类中取出对应的方法
         ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(type_name.toString());
         ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
+        if(method == null){
+            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method:" + name.toString() + "does no exist!");
+            return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
+        }
         // 我们需要校验方法实际传递参数的类型应该为定义类型的子类
         StringBuilder sb = new StringBuilder();
         if (!symbolTable.checkArguments(argTypes, method, sb)) {
@@ -917,9 +921,16 @@ class dispatch extends Expression {
         // 从前面的调用方的类中取出对应的方法
         ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(callerType.getClassName());
         ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
+        if(method == null){
+            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method:" + name.toString() + " does not exist!");
+            return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
+        }
         // 我们需要校验方法实际传递参数的类型应该为定义类型的子类
         StringBuilder sb = new StringBuilder();
-        symbolTable.checkArguments(argTypes, method, sb);
+        if(!symbolTable.checkArguments(argTypes, method, sb)){
+            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, sb.toString());
+            return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
+        }
         // 如果声明的返回类型为SELF_TYPE,那么返回 expr 进行 TypeChecking 后的类型
         ClassTable.CoolClass.Type returnType;
         if (method.getReturnType().getClassName().equals(TreeConstants.SELF_TYPE.toString())) {

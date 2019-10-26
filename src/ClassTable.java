@@ -453,7 +453,7 @@ class ClassTable {
 
     public PrintStream semantError(AbstractSymbol filename, int linenum, String errMessage) {
         errorStream.print(filename + ":" + linenum + ": ");
-        errorStream.print(errMessage);
+        errorStream.println(errMessage);
         return semantError();
     }
 
