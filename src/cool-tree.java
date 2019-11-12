@@ -205,7 +205,7 @@ abstract class Expression extends TreeNode {
         }
     }
 
-    public ClassTable.CoolClass.Type semant0(SymbolTable symbolTable){
+    public ClassTable.CoolClass.Type semant0(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type type = this.semant(symbolTable);
         this.type = AbstractTable.idtable.addString(type.getClassName());
         return type;
@@ -375,7 +375,7 @@ class programc extends Program {
                 throw new RuntimeException("noexit");
             }
 
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             System.err.println("Compilation halted due to static semantic errors.");
 //            System.exit(1);
             throw new RuntimeException("noexit");
@@ -455,10 +455,10 @@ class class_c extends Class_ {
         symbolTable.enterScope();
         // 遍历所有属性事先加入scope中去
         ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(this.getName().toString());
-        for(Map.Entry<String, ClassTable.CoolClass.Attr> entry : coolClass.getAttrMap().entrySet()){
+        for (Map.Entry<String, ClassTable.CoolClass.Attr> entry : coolClass.getAttrMap().entrySet()) {
             AbstractSymbol identifier = AbstractTable.idtable.addString(entry.getKey());
             ClassTable.CoolClass.Type type = entry.getValue().getType();
-            if(entry.getKey().equals(TreeConstants.self.toString())){
+            if (entry.getKey().equals(TreeConstants.self.toString())) {
                 symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "self can not be used as identifier");
             }
             symbolTable.addId(identifier, type);
@@ -544,15 +544,15 @@ class method extends Feature {
         }
         // method return type
         ClassTable.CoolClass.Type returnType;
-        if(this.return_type.toString().equals(TreeConstants.SELF_TYPE.toString())){
+        if (this.return_type.toString().equals(TreeConstants.SELF_TYPE.toString())) {
             returnType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
-        }else{
+        } else {
             returnType = new ClassTable.CoolClass.Type(return_type.toString());
         }
         // type checking type
         ClassTable.CoolClass.Type checkingType = symbolTable.typeCheckingExpression(expr);
         // 方法的body返回类型应该为方法定义类型的子类型
-        if(!symbolTable.getClassTable().checkSub(checkingType, returnType)){
+        if (!symbolTable.getClassTable().checkSub(checkingType, returnType)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method return type is not subtype of declaring type!");
         }
         symbolTable.exitScope();
@@ -846,7 +846,7 @@ class static_dispatch extends Expression {
         // 从前面的调用方的类中取出对应的方法
         ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(type_name.toString());
         ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
-        if(method == null){
+        if (method == null) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method:" + name.toString() + "does no exist!");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
@@ -857,7 +857,11 @@ class static_dispatch extends Expression {
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
         // 增加校验 callerType 应该为 type_name 的子类
-        if (!symbolTable.getClassTable().checkSub(callerType, new ClassTable.CoolClass.Type(type_name.toString()))) {
+        ClassTable.CoolClass.Type realCallerType = callerType;
+        if (callerType.getClassName().equals(TreeConstants.SELF_TYPE.toString())) {
+            realCallerType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
+        if (!symbolTable.getClassTable().checkSub(realCallerType, new ClassTable.CoolClass.Type(type_name.toString()))) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber,
                     "caller expression's type should be the subtype of declaration type");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
@@ -931,18 +935,18 @@ class dispatch extends Expression {
         // 取出方法声明的所有Types, 校验类型是否匹配, 即argTypes中的参数是否为声明的类型的子类型
         // 从前面的调用方的类中取出对应的方法
         String callerRealType = callerType.getClassName();
-        if(callerRealType.equals(TreeConstants.SELF_TYPE.toString())){
+        if (callerRealType.equals(TreeConstants.SELF_TYPE.toString())) {
             callerRealType = symbolTable.getCurrentClassNode().name.toString();
         }
         ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(callerRealType);
         ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
-        if(method == null){
+        if (method == null) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method:" + name.toString() + " does not exist!");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
         // 我们需要校验方法实际传递参数的类型应该为定义类型的子类
         StringBuilder sb = new StringBuilder();
-        if(!symbolTable.checkArguments(argTypes, method, sb)){
+        if (!symbolTable.checkArguments(argTypes, method, sb)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, sb.toString());
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
         }
@@ -1125,10 +1129,10 @@ class typcase extends Expression {
         Set<AbstractSymbol> dedub = new HashSet<AbstractSymbol>();
         while (enumeration.hasMoreElements()) {
             branch b = (branch) enumeration.nextElement();
-            if(dedub.contains(b.type_decl)){
+            if (dedub.contains(b.type_decl)) {
                 // 定义了重复的类型分支
                 symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, b.lineNumber, "case branches has defined dumplicated types");
-            }else{
+            } else {
                 dedub.add(b.type_decl);
             }
             // 添加的同时确保分支之间没有类型冲突
@@ -1188,7 +1192,7 @@ class block extends Expression {
                 ClassTable.CoolClass.Type type = expr.semant0(symbolTable);
                 types.add(type);
             }
-            if(types.size() > 0){
+            if (types.size() > 0) {
                 return types.get(types.size() - 1);
             }
         }
@@ -1616,7 +1620,12 @@ class lt extends Expression {
 class eq extends Expression {
     protected Expression e1;
     protected Expression e2;
-
+    static HashSet<String> sets = new HashSet<String>();
+    static {
+        sets.add(TreeConstants.Int.toString());
+        sets.add(TreeConstants.Bool.toString());
+        sets.add(TreeConstants.Str.toString());
+    }
     /**
      * Creates "eq" AST node.
      *
@@ -1651,21 +1660,10 @@ class eq extends Expression {
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t1 = e1.semant0(symbolTable);
         ClassTable.CoolClass.Type t2 = e2.semant0(symbolTable);
-        if (!t1.getClassName().equals(TreeConstants.Int.toString())
-                && !t1.getClassName().equals(TreeConstants.Str.toString())
-                && !t1.getClassName().equals(TreeConstants.Bool.toString())) {
-            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
-                    this.lineNumber, "Left expression's type should be Int, Str, Bool");
-            return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
+        if (!sets.contains(t1.getClassName()) && !sets.contains(t2.getClassName())) {
+            return new ClassTable.CoolClass.Type(TreeConstants.Bool.toString());
         }
-        if (!t2.getClassName().equals(TreeConstants.Int.toString())
-                && !t2.getClassName().equals(TreeConstants.Str.toString())
-                && !t2.getClassName().equals(TreeConstants.Bool.toString())) {
-            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
-                    this.lineNumber, "Right expression's type should be Int, Str, Bool");
-            return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
-        }
-        if (!t1.equals(t2)) {
+        if ((sets.contains(t1.getClassName()) || sets.contains(t2.getClassName())) && !t1.equals(t2)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename,
                     this.lineNumber, "Two sub expressions should have the same type!");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());

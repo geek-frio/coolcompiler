@@ -1,69 +1,67 @@
-#1
+#12
 _program
   #1
   _class
     Main
     Object
-    "grading/badargs1.test"
+    "compare.test"
     (
     #1
     _method
       main
-      Object
+      Int
       #1
       _int
         0
-      : _no_type
+      : Int
     )
-  #1
+  #3
   _class
     A
     Object
-    "grading/badargs1.test"
+    "compare.test"
     (
-    #1
-    _method
-      bar
-      Object
-      #1
-      _dispatch
-        #1
-        _new
-          B
-        : _no_type
-        foo
-        (
-        #1
-        _object
-          self
-        : _no_type
-        #1
-        _int
-          29
-        : _no_type
-        )
-      : _no_type
     )
-  #1
+  #4
   _class
     B
-    A
-    "grading/badargs1.test"
+    Object
+    "compare.test"
     (
-    #1
-    _method
-      foo
-      #1
-      _formal
-        b
-        B
-      #1
-      _formal
-        x
-        Int
-      String
-      #1
-      _string
-        "moo"
+    )
+  #12
+  _class
+    C
+    Object
+    "compare.test"
+    (
+    #6
+    _attr
+      a
+      A
+      #6
+      _no_expr
       : _no_type
+    #7
+    _attr
+      b
+      B
+      #7
+      _no_expr
+      : _no_type
+    #11
+    _method
+      compare
+      Bool
+      #11
+      _eq
+        #10
+        _object
+          a
+        : A
+        #11
+        _object
+          b
+        : B
+      : Bool
     )
