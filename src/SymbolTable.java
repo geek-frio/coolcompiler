@@ -215,8 +215,12 @@ class SymbolTable {
         }
         for (int i = 0; i < argTypes.size(); i++) {
             ClassTable.CoolClass.Type arg = argTypes.get(i);
+            ClassTable.CoolClass.Type argType = arg;
+            if(arg.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                argType = new ClassTable.CoolClass.Type(this.getCurrentClassNode().name.toString());
+            }
             ClassTable.CoolClass.Type dclrArg = method.getArgType().get(i).getType();
-            if(!this.getClassTable().checkSub(arg, dclrArg)){
+            if(!this.getClassTable().checkSub(argType, dclrArg)){
                 sb.append(String.format("Method:%s argument type is not identified to declaring type!", method.getMethodName()));
                 return false;
             }
