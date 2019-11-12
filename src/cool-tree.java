@@ -533,6 +533,8 @@ class method extends Feature {
         // 加入self的type映射关系
         symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString()));
         Enumeration e = formals.getElements();
+        // 校验方法的参数反复定义
+        HashSet<AbstractSymbol> argSymbols = new HashSet<AbstractSymbol>();
         while (e.hasMoreElements()) {
             formalc fc = (formalc) e.nextElement();
             String type = fc.type_decl.toString();
@@ -541,6 +543,12 @@ class method extends Feature {
                 symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "method argument type can not be SELF_TYPE!");
             }
             symbolTable.addId(fc.name, new ClassTable.CoolClass.Type(fc.type_decl.toString()));
+            // 逐个校验参数名称
+            if(argSymbols.contains(fc.name)){
+                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "argument has already been defined!");
+            }else{
+                argSymbols.add(fc.name);
+            }
         }
         // method return type
         ClassTable.CoolClass.Type returnType;
