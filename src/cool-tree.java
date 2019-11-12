@@ -370,13 +370,15 @@ class programc extends Program {
             }
             // 如果有异常, 退出执行状态
             if (classTable.errors()) {
-                System.err.println("Compilation halted due to static semantic errors.");
+//                System.err.println("Compilation halted due to static semantic errors.");
 //                System.exit(1);
+                throw new RuntimeException("noexit");
             }
+
         }catch (RuntimeException e){
-            e.printStackTrace();
             System.err.println("Compilation halted due to static semantic errors.");
 //            System.exit(1);
+            throw new RuntimeException("noexit");
         }
     }
 
@@ -529,7 +531,7 @@ class method extends Feature {
         // 提取每个参数的类型
         symbolTable.enterScope();
         // 加入self的type映射关系
-        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().getName().toString()));
+        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString()));
         Enumeration e = formals.getElements();
         while (e.hasMoreElements()) {
             formalc fc = (formalc) e.nextElement();
@@ -617,7 +619,7 @@ class attr extends Feature {
         ClassTable.CoolClass.Type type = (ClassTable.CoolClass.Type) symbolTable.lookup(this.name);
         // 2), 环境变量中加入self -> SELF_TYPE
         symbolTable.enterScope();
-        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString()));
+        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString()));
         // 3), 执行TypeChecking init的Expression
         ClassTable.CoolClass.Type returnType = init.semant0(symbolTable);
         symbolTable.exitScope();
@@ -837,7 +839,7 @@ class static_dispatch extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         // 获取caller type, 如果caller type 定义为
-        ClassTable.CoolClass.Type callerType = symbolTable.typeCheckingExpression(expr);
+        ClassTable.CoolClass.Type callerType = expr.semant0(symbolTable);
         // 循环 type checking 每个参数的类型
         List<ClassTable.CoolClass.Type> argTypes = symbolTable.typeCheckMethodArguments(actual);
         // 取出方法声明的所有Types, 校验类型是否匹配, 即argTypes中的参数是否为声明的类型的子类型
@@ -923,12 +925,16 @@ class dispatch extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         // 获取caller type, 如果caller type 定义为
-        ClassTable.CoolClass.Type callerType = symbolTable.typeCheckingExpression(expr);
+        ClassTable.CoolClass.Type callerType = expr.semant0(symbolTable);
         // 循环 type checking 每个参数的类型
         List<ClassTable.CoolClass.Type> argTypes = symbolTable.typeCheckMethodArguments(actual);
         // 取出方法声明的所有Types, 校验类型是否匹配, 即argTypes中的参数是否为声明的类型的子类型
         // 从前面的调用方的类中取出对应的方法
-        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(callerType.getClassName());
+        String callerRealType = callerType.getClassName();
+        if(callerRealType.equals(TreeConstants.SELF_TYPE.toString())){
+            callerRealType = symbolTable.getCurrentClassNode().name.toString();
+        }
+        ClassTable.CoolClass coolClass = symbolTable.getClassTable().getCoolClass(callerRealType);
         ClassTable.CoolClass.Method method = coolClass.getM(name.toString());
         if(method == null){
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method:" + name.toString() + " does not exist!");
@@ -1116,9 +1122,18 @@ class typcase extends Expression {
         List<ClassTable.CoolClass.Type> types = new ArrayList<ClassTable.CoolClass.Type>();
         // 获取cases的所有types数组列表
         Enumeration enumeration = cases.getElements();
+        Set<AbstractSymbol> dedub = new HashSet<AbstractSymbol>();
         while (enumeration.hasMoreElements()) {
             branch b = (branch) enumeration.nextElement();
-            types.add(b.semant(symbolTable));
+            if(dedub.contains(b.type_decl)){
+                // 定义了重复的类型分支
+                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, b.lineNumber, "case branches has defined dumplicated types");
+            }else{
+                dedub.add(b.type_decl);
+            }
+            // 添加的同时确保分支之间没有类型冲突
+            ClassTable.CoolClass.Type type = b.semant(symbolTable);
+            types.add(type);
         }
         // 取所有类型的父类
         ClassTable.CoolClass.Type type = symbolTable.getClassTable().lub(types);

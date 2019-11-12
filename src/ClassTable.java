@@ -126,7 +126,14 @@ class ClassTable {
         Enumeration enumeration = classes.getElements();
         while (enumeration.hasMoreElements()) {
             class_c classc = (class_c) enumeration.nextElement();
-            classcMap.put(classc.getName().toString(), classc);
+            // 之前已经存在, 重新定义的错误, class不能被反复定义
+            if(classcMap.get(classc.getName().toString()) != null){
+                PrintStream printStream = semantError(classc.filename, classc.lineNumber);
+                printStream.println("class redifine error");
+                throw new RuntimeException();
+            }else{
+                classcMap.put(classc.getName().toString(), classc);
+            }
         }
     }
 
@@ -286,23 +293,16 @@ class ClassTable {
             // 这里关于取出共有父类, 可以使用类似归并排序的算法
             // class 的继承结构是一个树状结构
             // 向上寻找共同的父类的时候, 一定是一个同一个层级的父类, 所以可以使用O(n)的复杂度来寻找出共有的父类
-            int startNum = -Math.max(t1In.size(), t2In.size());
-            int startT1Num = startNum + t1In.size();
-            int startT2Num = startNum + t2In.size();
-            while (true) {
-                // 如果其中有任何一个指针超过了,则都找不到共同的parent type
-                if (startT1Num > (t1In.size() - 1) || startT2Num > (t2In.size() - 1)) {
-                    break;
+            for(int startNum = Math.max(t1In.size(), t2In.size()); startNum >= 0; startNum--) {
+                if(startNum > (t1In.size() - 1) || startNum > (t2In.size() - 1)){
+                    continue;
                 }
-                if (startT1Num >= 0 && startT2Num >= 0) {
-                    CoolClass.Type ct1 = t1In.get(startT1Num);
-                    CoolClass.Type ct2 = t2In.get(startT2Num);
-                    if (ct1.getClassName().equals(ct2.className)) {
-                        return new CoolClass.Type(ct1.getClassName());
-                    }
+                CoolClass.Type ct1 = t1In.get(startNum);
+                CoolClass.Type ct2 = t2In.get(startNum);
+                if (ct1.getClassName().equals(ct2.getClassName())) {
+                    return new CoolClass.Type(ct1.getClassName());
                 }
-                startT1Num++;
-                startT2Num++;
+                startNum--;
             }
         }
         return null;

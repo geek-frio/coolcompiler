@@ -50,9 +50,10 @@ class Semant {
             Object result = parser.parse().value;
             ((Program) result).semant();
             ((Program) result).dump_with_types(System.out, 0);
-
         } catch (Exception ex) {
-            ex.printStackTrace(System.err);
+            if(!ex.getMessage().equals("noexit")){
+                ex.printStackTrace(System.err);
+            }
         } finally {
             long usedTime = System.currentTimeMillis() - t1;
             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
