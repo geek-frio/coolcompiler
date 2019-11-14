@@ -336,15 +336,14 @@ class ClassTable {
                 inheritedTypeList.add(coolClass.getInheritedTypes());
             }
             // 逐个分析同等depth的parent类,如果在同等深度类都相等,那么就是最终的返回结果
-            int startIndex = -classMaxDepth;
             // 当超过了继承列表中最长的那个列表的最大下标的时候,整个循环停止
-            while (startIndex < classMaxDepth) {
+            for (int startIndex = classMaxDepth - 1; startIndex >= 0; startIndex--) {
                 boolean match = false;
                 CoolClass.Type flag = null;
                 for(int i = inheritedTypeList.size() - 1; i >= 0; i--){
                     List<CoolClass.Type> list = inheritedTypeList.get(i);
-                    int currentIndex = startIndex + list.size();
-                    if (currentIndex >= 0) {
+                    int currentIndex = startIndex;
+                    if (currentIndex < list.size()) {
                         // 先赋值给flag第一个类型
                         if (flag == null) {
                             flag = list.get(currentIndex);
@@ -367,8 +366,6 @@ class ClassTable {
                 // 如果最终match的结果为true,说明找到了共同的父类,那么就退出循环,直接返回类型
                 if (match)
                     return flag;
-                // 推动指针移动
-                startIndex++;
             }
         }
         return null;

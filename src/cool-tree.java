@@ -376,6 +376,7 @@ class programc extends Program {
             }
 
         } catch (RuntimeException e) {
+//            e.printStackTrace();
             System.err.println("Compilation halted due to static semantic errors.");
 //            System.exit(1);
             throw new RuntimeException("noexit");

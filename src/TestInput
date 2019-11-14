@@ -1,67 +1,82 @@
-#12
+#7
 _program
-  #1
+  #7
   _class
     Main
-    Object
-    "compare.test"
+    IO
+    "if.test"
     (
-    #1
+    #2
+    _attr
+      x
+      Int
+      #2
+      _no_expr
+      : _no_type
+    #5
     _method
       main
-      Int
-      #1
-      _int
-        0
-      : Int
-    )
-  #3
-  _class
-    A
-    Object
-    "compare.test"
-    (
-    )
-  #4
-  _class
-    B
-    Object
-    "compare.test"
-    (
-    )
-  #12
-  _class
-    C
-    Object
-    "compare.test"
-    (
+      Object
+      #5
+      _block
+        #4
+        _cond
+          #4
+          _eq
+            #4
+            _plus
+              #4
+              _let
+                x
+                Int
+                #4
+                _int
+                  5
+                : Int
+                #4
+                _plus
+                  #4
+                  _object
+                    x
+                  : Int
+                  #4
+                  _int
+                    3
+                  : Int
+                : Int
+              : Int
+              #4
+              _int
+                3
+              : Int
+            : Int
+            #4
+            _int
+              9
+            : Int
+          : Bool
+          #4
+          _int
+            3
+          : Int
+          #4
+          _dispatch
+            #4
+            _object
+              self
+            : SELF_TYPE
+            foo
+            (
+            )
+          : String
+        : Object
+      : Object
     #6
-    _attr
-      a
-      A
-      #6
-      _no_expr
-      : _no_type
-    #7
-    _attr
-      b
-      B
-      #7
-      _no_expr
-      : _no_type
-    #11
     _method
-      compare
-      Bool
-      #11
-      _eq
-        #10
-        _object
-          a
-        : A
-        #11
-        _object
-          b
-        : B
-      : Bool
+      foo
+      String
+      #6
+      _string
+        "test"
+      : String
     )
