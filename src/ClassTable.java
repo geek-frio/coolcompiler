@@ -302,7 +302,6 @@ class ClassTable {
                 if (ct1.getClassName().equals(ct2.getClassName())) {
                     return new CoolClass.Type(ct1.getClassName());
                 }
-                startNum--;
             }
         }
         return null;
