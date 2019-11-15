@@ -633,6 +633,9 @@ class attr extends Feature {
         ClassTable.CoolClass.Type returnType = init.semant0(symbolTable);
         symbolTable.exitScope();
         // 4), 返回类型, 查询返回类型是否为 T0 的子类或者等于 T0
+        if(returnType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+            returnType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
         if (!symbolTable.getClassTable().checkSub(returnType, type)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "init expr type should be subtype of declaring type");
         }
@@ -1025,6 +1028,12 @@ class cond extends Expression {
         ClassTable.CoolClass.Type ifBranchType = then_exp.semant0(symbolTable);
         ClassTable.CoolClass.Type elseBranchType = else_exp.semant0(symbolTable);
         // 取两者往上的共同父类
+        if(ifBranchType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+            ifBranchType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
+        if(elseBranchType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+            elseBranchType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
         ClassTable.CoolClass.Type lubType = symbolTable.getClassTable().lub(ifBranchType, elseBranchType);
         if (lubType == null) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber,
@@ -1219,6 +1228,10 @@ class let extends Expression {
     protected AbstractSymbol type_decl;
     protected Expression init;
     protected Expression body;
+    static HashSet<String> KEYIDENTIFIERS = new HashSet<String>();
+    static {
+        KEYIDENTIFIERS.add(TreeConstants.self.toString());
+    }
 
     /**
      * Creates "let" AST node.
@@ -1262,16 +1275,19 @@ class let extends Expression {
 
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         // 如果声明类型为SelfType,我们要进行转化为实际的类型
-        ClassTable.CoolClass.Type t0;
-        if (type_decl.toString().equals(TreeConstants.SELF_TYPE)) {
-            t0 = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
-        } else {
-            t0 = new ClassTable.CoolClass.Type(type_decl.toString());
-        }
+        ClassTable.CoolClass.Type t0 = new ClassTable.CoolClass.Type(type_decl.toString());
         // 如果init expr不为空,那么我们应该校验的是这个expr返回的类型是否和声明的类型一致
         if (!(init instanceof no_expr)) {
             ClassTable.CoolClass.Type initType = init.semant0(symbolTable);
-            if (!symbolTable.getClassTable().checkSub(initType, t0)) {
+            ClassTable.CoolClass.Type checkInitType = initType;
+            if(initType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                checkInitType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+            }
+            ClassTable.CoolClass.Type checkT0Type = t0;
+            if(t0.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                checkT0Type = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+            }
+            if (!symbolTable.getClassTable().checkSub(checkInitType, checkT0Type)) {
                 symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, init.lineNumber,
                         "Init Expression's type should be subtype of declaration's type");
                 return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());
@@ -1279,6 +1295,10 @@ class let extends Expression {
         }
         // 加入新声明的 x:T0 到 scope 中去
         symbolTable.enterScope();
+        // 判断identifier的命名是否属于关键字集合
+        if(KEYIDENTIFIERS.contains(identifier.toString())){
+            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, init.lineNumber, "illegal idenfier, name should not be key identifier name!");
+        }
         symbolTable.addId(identifier, t0);
         ClassTable.CoolClass.Type t2 = body.semant0(symbolTable);
         symbolTable.exitScope();
@@ -1948,7 +1968,7 @@ class new_ extends Expression {
         // 分两种情况
         // type_name 为SELF_TYPE的情况
         if (type_name.equals(TreeConstants.SELF_TYPE)) {
-            return new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().getName().toString());
+            return new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString());
         }
         // type_name 为正常类型的情况
         else {

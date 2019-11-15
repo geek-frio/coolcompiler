@@ -1,3 +1,4 @@
+
 import java.io.PrintStream;
 import java.util.*;
 
@@ -384,13 +385,14 @@ class ClassTable {
              */
             if (parentName.equals(TreeConstants.Int.toString())
                     || parentName.equals(TreeConstants.Str.toString())
-                    || parentName.equals(TreeConstants.Bool.toString())) {
+                    || parentName.equals(TreeConstants.Bool.toString())
+                    || parentName.equals(TreeConstants.SELF_TYPE.toString())) {
                 throw new CoolClassFormedException(String.format("%s can not be inherited", parentName), cls.lineNumber);
             }
             class_c parent = classcMap.get(parentName);
             // 如果找不到 class 的对应的父类, 应该抛出异常
             if (parent == null) {
-                throw new CoolClassFormedException(String.format("% class does not exists", cls.getParent()), cls.lineNumber);
+                throw new CoolClassFormedException(String.format("%s class does not exists", cls.getParent().toString()), cls.lineNumber);
             }
             // 否则,将新发现的父类加入栈,操作栈头的父类
             else {
@@ -675,6 +677,31 @@ class ClassTable {
 
         public CoolClassFormedException(String message, int linenum) {
             this.message = message;
+            this.linenum = linenum;
+        }
+
+        public class_c getCls() {
+            return cls;
+        }
+
+        public void setCls(class_c cls) {
+            this.cls = cls;
+        }
+
+        @Override
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public int getLinenum() {
+            return linenum;
+        }
+
+        public void setLinenum(int linenum) {
             this.linenum = linenum;
         }
     }
