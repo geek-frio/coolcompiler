@@ -531,40 +531,63 @@ class method extends Feature {
         // 需要将参数信息加入到SymbolTable中去
         // 提取每个参数的类型
         symbolTable.enterScope();
-        // 加入self的type映射关系
-        symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString()));
-        Enumeration e = formals.getElements();
-        // 校验方法的参数反复定义
-        HashSet<AbstractSymbol> argSymbols = new HashSet<AbstractSymbol>();
-        while (e.hasMoreElements()) {
-            formalc fc = (formalc) e.nextElement();
-            String type = fc.type_decl.toString();
-            if (type.equals(TreeConstants.SELF_TYPE.toString())) {
-                // 方法参数不能传递 Self Type的类型
-                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "method argument type can not be SELF_TYPE!");
+        try {
+            // 加入self的type映射关系
+            symbolTable.addId(TreeConstants.self, new ClassTable.CoolClass.Type(TreeConstants.SELF_TYPE.toString()));
+            Enumeration e = formals.getElements();
+            // 校验方法的参数反复定义
+            HashSet<AbstractSymbol> argSymbols = new HashSet<AbstractSymbol>();
+            while (e.hasMoreElements()) {
+                formalc fc = (formalc) e.nextElement();
+                String type = fc.type_decl.toString();
+                if (type.equals(TreeConstants.SELF_TYPE.toString())) {
+                    // 方法参数不能传递 Self Type的类型
+                    symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "method argument type can not be SELF_TYPE!");
+                }
+                symbolTable.addId(fc.name, new ClassTable.CoolClass.Type(fc.type_decl.toString()));
+                // 参数名称不能使用self关键字
+                if(fc.name.toString().equals(TreeConstants.self.toString())){
+                    symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "formal argument's name should not be self");
+                }
+                // 逐个校验参数名称
+                if (argSymbols.contains(fc.name)) {
+                    symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "argument has already been defined!");
+                } else {
+                    argSymbols.add(fc.name);
+                }
             }
-            symbolTable.addId(fc.name, new ClassTable.CoolClass.Type(fc.type_decl.toString()));
-            // 逐个校验参数名称
-            if(argSymbols.contains(fc.name)){
-                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, fc.lineNumber, "argument has already been defined!");
-            }else{
-                argSymbols.add(fc.name);
+            // method return type
+            ClassTable.CoolClass.Type returnType = new ClassTable.CoolClass.Type(return_type.toString());
+            ClassTable.CoolClass.Type checkingReturnType;
+            if (this.return_type.toString().equals(TreeConstants.SELF_TYPE.toString())) {
+                checkingReturnType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+            } else {
+                checkingReturnType = returnType;
             }
+            // 校验 method return type是否存在
+            if (!symbolTable.getClassTable().coolClassExists(checkingReturnType.getClassName())) {
+                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method return type does not exists!");
+                return null;
+            }
+            // type checking type
+            ClassTable.CoolClass.Type exprType = expr.semant0(symbolTable);
+            ClassTable.CoolClass.Type checkingExprType = exprType;
+            if(exprType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                checkingExprType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+            }
+            if(returnType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                // body 返回类型也必须是SELF_TYPE
+                if(!exprType.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+                    symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method body return type should be SELF_TYPE!");
+                }
+            }
+            // 方法的body返回类型应该为方法定义类型的子类型
+            if (!symbolTable.getClassTable().checkSub(checkingExprType, checkingReturnType)) {
+                symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method return type is not subtype of declaring type!");
+            }
+        }finally {
+            symbolTable.exitScope();
         }
-        // method return type
-        ClassTable.CoolClass.Type returnType;
-        if (this.return_type.toString().equals(TreeConstants.SELF_TYPE.toString())) {
-            returnType = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
-        } else {
-            returnType = new ClassTable.CoolClass.Type(return_type.toString());
-        }
-        // type checking type
-        ClassTable.CoolClass.Type checkingType = symbolTable.typeCheckingExpression(expr);
-        // 方法的body返回类型应该为方法定义类型的子类型
-        if (!symbolTable.getClassTable().checkSub(checkingType, returnType)) {
-            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "method return type is not subtype of declaring type!");
-        }
-        symbolTable.exitScope();
         // 方法体没有返回类型
         return null;
     }
@@ -785,6 +808,17 @@ class assign extends Expression {
     public ClassTable.CoolClass.Type semant(SymbolTable symbolTable) {
         ClassTable.CoolClass.Type t0 = (ClassTable.CoolClass.Type) symbolTable.lookup(name);
         ClassTable.CoolClass.Type t1 = expr.semant0(symbolTable);
+        // self identifier 不能用于assignment 赋值
+        if(name.toString().equals(TreeConstants.self.toString())){
+            symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "Cannot assign to 'self'");
+            return t1;
+        }
+        if(t0.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+            t0 = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
+        if(t1.getClassName().equals(TreeConstants.SELF_TYPE.toString())){
+            t1 = new ClassTable.CoolClass.Type(symbolTable.getCurrentClassNode().name.toString());
+        }
         if (!symbolTable.getClassTable().checkSub(t1, t0)) {
             symbolTable.getClassTable().semantError(symbolTable.getCurrentClassNode().filename, this.lineNumber, "Assign expr type should be the subtype of declaring type!");
             return new ClassTable.CoolClass.Type(TreeConstants.Object_.toString());

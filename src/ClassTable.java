@@ -27,6 +27,10 @@ class ClassTable {
         return coolClass;
     }
 
+    public boolean coolClassExists(String className){
+        return coolClassMap.containsKey(className);
+    }
+
     /**
      * Creates data structures representing basic Cool classes (Object, IO, Int,
      * Bool, String). Please note: as is this method does not do anything useful;
@@ -127,6 +131,11 @@ class ClassTable {
         Enumeration enumeration = classes.getElements();
         while (enumeration.hasMoreElements()) {
             class_c classc = (class_c) enumeration.nextElement();
+            // 判断Class定义的名称不能为SELF_TYPE
+            if(classc.getName().toString().equals(TreeConstants.SELF_TYPE.toString())){
+                semantError(classc.filename, classc.lineNumber, "SELF_TYPE should not be defined as class name");
+                throw new RuntimeException();
+            }
             // 之前已经存在, 重新定义的错误, class不能被反复定义
             if(classcMap.get(classc.getName().toString()) != null){
                 PrintStream printStream = semantError(classc.filename, classc.lineNumber);
@@ -135,6 +144,11 @@ class ClassTable {
             }else{
                 classcMap.put(classc.getName().toString(), classc);
             }
+        }
+        // 判断用户是否定义了Main Class,如果没有定义应该报错
+        if(classcMap.get(TreeConstants.Main.toString()) == null){
+            PrintStream printStream = semantError();
+            printStream.println("Class Main is not defined.");
         }
     }
 
@@ -249,7 +263,7 @@ class ClassTable {
         if ((old = methodsMap.get(methodName)) != null) {
             // 方法在子类中重新实现,但是参数或者返回类型并不与父类相匹配
             if (!old.equals(method)) {
-                throw new CoolClassFormedException(String.format("method:%s redifine failed", methodName), feature.lineNumber);
+                throw new CoolClassFormedException(String.format("method:%s sub class method is not same with parent's method define", methodName), feature.lineNumber);
             }
             // IO 基础类的方法不能被重新实现
             if (old.getOriginType().className.equals(TreeConstants.IO.toString())) {
@@ -624,9 +638,14 @@ class ClassTable {
 
             public boolean equals(Method obj) {
                 if (this.methodName.equals(obj.getMethodName())) {
+                    // 第一步要先判断参数的数量是否相等, 如果数量不相等,也是无法确定相同的
+                    if (this.argType.size() != obj.getArgType().size()){
+                        return false;
+                    }
+                    //
                     if (this.argType.size() == obj.getArgType().size()) {
                         for (int i = 0; i < argType.size(); i++) {
-                            if (!argType.get(i).equals(obj.getArgType().get(i))) {
+                            if (!argType.get(i).getType().equals(obj.getArgType().get(i).getType())) {
                                 return false;
                             }
                         }
